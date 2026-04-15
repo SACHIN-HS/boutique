@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block page_title %}SKU Center{% endblock %}
+{% block breadcrumb %}SKU{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="card-title mb-0">SKU Format</h5></div>
+            <div class="card-body">
+                <p class="text-muted">Format: <strong>LAA</strong> + 3 letters product + 1 letter category + 3 letters supplier + YYMMDD</p>
+                <p class="text-muted mb-0">Example: <strong>LAAKURWJAI260408</strong></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="card-title mb-0">Manual SKU Generator</h5></div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Product Name</label>
+                            <input type="text" name="product_name" class="form-control" placeholder="Kurti – Floral Print" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            <select name="category" class="form-select" required>
+                                <option value="" disabled selected>Select</option>
+                                <option value="Men">Men</option>
+                                <option value="Women">Women</option>
+                                <option value="Kids">Kids</option>
+                                <option value="Jewelry">Jewelry</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Supplier Name</label>
+                            <input type="text" name="supplier_name" class="form-control" placeholder="Jaipur Textiles" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Purchase Date</label>
+                            <input type="date" name="purchase_date" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success btn-sm">Generate SKU</button>
+                            {% if sku_out %}
+                            <span class="ms-3 fw-bold text-success fs-5">{{ sku_out }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h5 class="card-title mb-0">Verified POs — SKU Printing</h5></div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="text-muted">
+                    <tr>
+                        <th>PO</th>
+                        <th>Vendor</th>
+                        <th>Item</th>
+                        <th>Category</th>
+                        <th>Colors</th>
+                        <th>Sizes</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>SKU Printed</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for po in verified_pos %}
+                        {% for item in po.items.all %}
+                        <tr>
+                            <td class="fw-semibold">{{ po.po_number }}</td>
+                            <td>{{ po.vendor.name }}</td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.category }}</td>
+                            <td>{{ item.colors }}</td>
+                            <td>{{ item.sizes }}</td>
+                            <td>{{ item.qty }}</td>
+                            <td>${{ item.price }}</td>
+                            <td>
+                                {% if item.sku_printed %}
+                                <span class="badge bg-success-subtle text-success">Printed</span>
+                                {% else %}
+                                <span class="badge bg-danger-subtle text-danger">Not Printed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not item.sku_printed %}
+                                <a href="{% url 'sku_mark_printed' item.pk %}" class="btn btn-soft-success btn-sm">Mark Printed</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% empty %}
+                    <tr><td colspan="10" class="text-center text-muted py-4">No verified POs yet. Verify items in Receiver page.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

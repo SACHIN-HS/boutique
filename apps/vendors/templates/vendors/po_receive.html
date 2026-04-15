@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block page_title %}Receive PO{% endblock %}
+{% block breadcrumb %}Receive PO{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="card-title mb-0">Receive: {{ po.po_number }} — {{ po.vendor.name }}</h5>
+                <a href="{% url 'po_list' %}" class="btn btn-light btn-sm">Back to POs</a>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-3">
+                            <thead class="text-muted">
+                                <tr>
+                                    <th>Received</th>
+                                    <th>Item</th>
+                                    <th>Category</th>
+                                    <th>Colors</th>
+                                    <th>Sizes</th>
+                                    <th>Qty</th>
+                                    <th>Price</th>
+                                    <th>Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in po.items.all %}
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" name="received" value="{{ item.pk }}" class="form-check-input"
+                                            {% if item.received %}checked{% endif %}>
+                                    </td>
+                                    <td class="fw-semibold">{{ item.name }}</td>
+                                    <td>{{ item.category }}</td>
+                                    <td>{{ item.colors }}</td>
+                                    <td>{{ item.sizes }}</td>
+                                    <td>{{ item.qty }}</td>
+                                    <td>${{ item.price }}</td>
+                                    <td>${{ item.line_total }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Save Receipt</button>
+                        <a href="{% url 'po_list' %}" class="btn btn-light">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

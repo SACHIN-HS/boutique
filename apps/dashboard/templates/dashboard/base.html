@@ -1,0 +1,69 @@
+{% load static %}
+<!doctype html>
+<html lang="en"
+    data-layout="vertical"
+    data-topbar="light"
+    data-sidebar="dark"
+    data-sidebar-size="lg"
+    data-sidebar-image="none"
+    data-preloader="disable"
+    data-theme="default"
+    data-theme-colors="default">
+
+<head>
+    {% include 'includes/head.html' %}
+</head>
+
+<body>
+
+<div id="layout-wrapper">
+
+    {% include 'includes/navbar.html' %}
+
+    {% include 'includes/sidebar.html' %}
+
+    <div class="vertical-overlay"></div>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <div class="main-content">
+        <div class="page-content">
+            <div class="container-fluid">
+
+                <!-- Page Title / Breadcrumb -->
+                {% block page_header %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                            <h4 class="mb-sm-0">{% block page_title %}Dashboard{% endblock %}</h4>
+                            <div class="page-title-right">
+                                <ol class="breadcrumb m-0">
+                                    <li class="breadcrumb-item">
+                                        <a href="{% url 'dashboard' %}">Home</a>
+                                    </li>
+                                    <li class="breadcrumb-item active">
+                                        {% block breadcrumb %}Dashboard{% endblock %}
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endblock %}
+
+                {% include 'includes/messages.html' %}
+
+                {% block content %}{% endblock %}
+
+            </div>
+        </div>
+
+        {% include 'includes/footer.html' %}
+    </div>
+    <!-- ========== END MAIN CONTENT ========== -->
+
+</div>
+
+{% include 'includes/scripts.html' %}
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block page_title %}Add Product{% endblock %}
+{% block breadcrumb %}Add Product{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header"><h5 class="card-title mb-0">Product Details</h5></div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Product Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="productName" class="form-control" placeholder="Product name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category <span class="text-danger">*</span></label>
+                            <select name="category" class="form-select" required>
+                                <option value="" disabled selected>Select category</option>
+                                <option value="Men">Men</option>
+                                <option value="Women">Women</option>
+                                <option value="Kids">Kids</option>
+                                <option value="Jewelry">Jewelry</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">SKU <span class="text-danger">*</span></label>
+                            <input type="text" name="sku" class="form-control" placeholder="SKU-001" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Slug URL <span class="text-danger">*</span></label>
+                            <input type="text" name="slug" id="productSlug" class="form-control" placeholder="product-slug" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description <span class="text-danger">*</span></label>
+                            <textarea name="description" class="form-control" rows="3" placeholder="Product description" required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" name="qty" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Discount (%)</label>
+                            <input type="number" name="discount" class="form-control" value="0" min="0" max="100">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Sizes</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for sz in sizes %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="sizes" value="{{ sz }}" id="sz_{{ sz }}">
+                                    <label class="form-check-label" for="sz_{{ sz }}">{{ sz }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Colors</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for c in colors %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="colors" value="{{ c }}" id="col_{{ c }}">
+                                    <label class="form-check-label" for="col_{{ c }}">{{ c }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Meta Title</label>
+                            <input type="text" name="meta_title" class="form-control" placeholder="Meta title">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Meta Tags (comma separated)</label>
+                            <input type="text" name="meta_tags" class="form-control" placeholder="tag1, tag2">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Meta Description</label>
+                            <input type="text" name="meta_description" class="form-control" placeholder="Meta description">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Product Image</label>
+                            <input type="file" name="image" class="form-control" accept="image/*">
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-success">Save Product</button>
+                            <a href="{% url 'product_view' %}" class="btn btn-light">View Products</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('productName').addEventListener('input', function() {
+    const slug = document.getElementById('productSlug');
+    if (!slug.value.trim()) {
+        slug.value = this.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+});
+</script>
+{% endblock %}

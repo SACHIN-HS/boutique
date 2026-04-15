@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block page_title %}Purchase Orders{% endblock %}
+{% block breadcrumb %}PO Orders{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-1">Total POs</p>
+                <h4 class="fs-22 fw-semibold">{{ pos.count }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-1">Total Value</p>
+                <h4 class="fs-22 fw-semibold">${{ total_value }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <h5 class="card-title mb-0">Purchase Orders</h5>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <form method="get" class="d-flex gap-2 align-items-center">
+                <input type="date" name="from" class="form-control form-control-sm" value="{{ date_from }}" placeholder="From">
+                <input type="date" name="to" class="form-control form-control-sm" value="{{ date_to }}" placeholder="To">
+                <button type="submit" class="btn btn-soft-primary btn-sm">Filter</button>
+                <a href="{% url 'po_list' %}" class="btn btn-light btn-sm">Clear</a>
+            </form>
+            <a href="{% url 'po_create' %}" class="btn btn-success btn-sm"><i class="ri-add-line me-1"></i> Create PO</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-centered align-middle table-nowrap mb-0">
+                <thead class="text-muted">
+                    <tr>
+                        <th>PO Number</th>
+                        <th>Vendor</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for po in pos %}
+                    <tr>
+                        <td class="fw-semibold">{{ po.po_number }}</td>
+                        <td>{{ po.vendor.name }}</td>
+                        <td>{{ po.items.count }}</td>
+                        <td>
+                            {% if po.status == 'Verified' %}
+                            <span class="badge bg-success-subtle text-success">Verified</span>
+                            {% elif po.status == 'Partial' %}
+                            <span class="badge bg-warning-subtle text-warning">Partial</span>
+                            {% else %}
+                            <span class="badge bg-danger-subtle text-danger">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>${{ po.total }}</td>
+                        <td>{{ po.created_at|date:"d M Y" }}</td>
+                        <td>
+                            <a href="{% url 'po_receive' po.pk %}" class="btn btn-soft-info btn-sm">Receive</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">No purchase orders yet. <a href="{% url 'po_create' %}">Create one</a>.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

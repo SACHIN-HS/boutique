@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block page_title %}Orders{% endblock %}
+{% block breadcrumb %}Orders{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h5 class="card-title mb-0">Orders ({{ orders.count }})</h5>
+        <a href="{% url 'tailor_view' %}" class="btn btn-light btn-sm">View Tailors</a>
+    </div>
+    <div class="card-body">
+        {% if not tailors %}
+        <div class="alert alert-warning">No tailors added yet. <a href="{% url 'tailor_add' %}">Add a tailor</a> to send orders for stitching.</div>
+        {% endif %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="text-muted">
+                    <tr>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Item</th>
+                        <th>Category</th>
+                        <th>Color</th>
+                        <th>Size</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Send to Tailor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td class="fw-semibold">{{ order.order_no }}</td>
+                            <td>{{ order.customer_name }}</td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.category }}</td>
+                            <td>{{ item.color }}</td>
+                            <td>{{ item.size }}</td>
+                            <td>{{ item.qty }}</td>
+                            <td>${{ item.price }}</td>
+                            <td>
+                                <span class="badge bg-info-subtle text-info">{{ item.status }}</span>
+                            </td>
+                            <td>
+                                {% if item.status == 'Sold' and tailors %}
+                                <form method="post" action="{% url 'order_send_to_tailor' item.pk %}" class="d-flex gap-2 align-items-center flex-wrap">
+                                    {% csrf_token %}
+                                    <select name="tailor" class="form-select form-select-sm" style="width:140px" required>
+                                        <option value="">Select tailor</option>
+                                        {% for t in tailors %}
+                                        <option value="{{ t.pk }}">{{ t.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="date" name="expected_at" class="form-control form-control-sm" style="width:130px">
+                                    <input type="text" name="expected_time" class="form-control form-control-sm" style="width:100px" placeholder="2pm-5pm">
+                                    <input type="text" name="notes" class="form-control form-control-sm" style="width:120px" placeholder="Notes">
+                                    <button type="submit" class="btn btn-soft-success btn-sm">Send</button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted small">{{ item.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% empty %}
+                    <tr><td colspan="10" class="text-center text-muted py-4">No orders yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

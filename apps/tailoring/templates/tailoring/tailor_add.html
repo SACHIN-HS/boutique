@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block page_title %}Add Tailor{% endblock %}
+{% block breadcrumb %}Add Tailor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="card-title mb-0">Tailor Details</h5>
+                <a href="{% url 'tailor_view' %}" class="btn btn-light btn-sm">View Tailors</a>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" placeholder="Tailor name" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Phone <span class="text-danger">*</span></label>
+                            <input type="text" name="phone" class="form-control" placeholder="+91 ..." required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Address <span class="text-danger">*</span></label>
+                            <textarea name="address" class="form-control" rows="2" placeholder="Address" required></textarea>
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-success">Save Tailor</button>
+                            <a href="{% url 'tailor_view' %}" class="btn btn-light">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% load static %}
+<!-- ========== SCRIPTS / JS ========== -->
+
+<!-- Bootstrap Bundle JS -->
+<script src="{% static 'assets/libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- Simplebar JS -->
+<script src="{% static 'assets/libs/simplebar/simplebar.min.js' %}"></script>
+
+<!-- Node Waves JS -->
+<script src="{% static 'assets/libs/node-waves/waves.min.js' %}"></script>
+
+<!-- Feather Icons JS -->
+<script src="{% static 'assets/libs/feather-icons/feather.min.js' %}"></script>
+
+<!-- Lord Icon JS -->
+<script src="{% static 'assets/js/pages/plugins/lord-icon-2.1.0.js' %}"></script>
+
+<!-- Plugins JS -->
+<script src="{% static 'assets/js/plugins.js' %}"></script>
+
+<!-- App JS -->
+<script src="{% static 'assets/js/app.js' %}"></script>
+
+<!-- Extra JS (child templates inject karte hain) -->
+{% block extra_js %}{% endblock %}
+<!-- ========== END SCRIPTS ========== -->

@@ -1,0 +1,197 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Stats Cards -->
+<div class="row">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Users</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <h5 class="text-success fs-14 mb-0">
+                            <i class="ri-arrow-right-up-line fs-13 align-middle"></i> +16.24%
+                        </h5>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ total_users|default:'0' }}</h4>
+                        <a href="{% url 'admin:auth_user_changelist' %}" class="text-decoration-underline">View all users</a>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                            <i class="bx bx-user-circle text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Orders</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ total_orders|default:'0' }}</h4>
+                        <a href="{% url 'order_list' %}" class="text-decoration-underline">View all orders</a>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle rounded fs-3">
+                            <i class="bx bx-shopping-bag text-info"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Revenue</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">${{ total_revenue|default:'0' }}</h4>
+                        <a href="{% url 'accounting_pl' %}" class="text-decoration-underline">See P&amp;L</a>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle rounded fs-3">
+                            <i class="bx bx-dollar-circle text-warning"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Vendors</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">{{ total_vendors|default:'0' }}</h4>
+                        <a href="{% url 'vendor_view' %}" class="text-decoration-underline">View vendors</a>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle rounded fs-3">
+                            <i class="bx bx-store text-primary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- end stats row -->
+
+<!-- Recent Logs + Quick Links -->
+<div class="row">
+
+    <!-- Recent Activity -->
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header align-items-center d-flex">
+                <h4 class="card-title mb-0 flex-grow-1">Recent Activity</h4>
+                <a href="{% url 'admin:index' %}" class="btn btn-soft-primary btn-sm">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive table-card">
+                    <table class="table table-hover table-centered align-middle table-nowrap mb-0">
+                        <thead class="text-muted">
+                            <tr>
+                                <th>#</th>
+                                <th>Object</th>
+                                <th>User</th>
+                                <th>Time</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_logs %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ log.object_repr }}</td>
+                                <td>{{ log.user }}</td>
+                                <td>{{ log.action_time|timesince }} ago</td>
+                                <td>
+                                    {% if log.action_flag == 1 %}
+                                    <span class="badge bg-success-subtle text-success">Added</span>
+                                    {% elif log.action_flag == 2 %}
+                                    <span class="badge bg-warning-subtle text-warning">Changed</span>
+                                    {% else %}
+                                    <span class="badge bg-danger-subtle text-danger">Deleted</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No recent activity</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="col-xl-4">
+        <div class="card card-height-100">
+            <div class="card-header align-items-center d-flex">
+                <h4 class="card-title mb-0 flex-grow-1">Quick Links</h4>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-2">
+                    <a href="{% url 'vendor_view' %}" class="btn btn-soft-primary text-start">
+                        <i class="ri-store-2-line me-2"></i> Vendors
+                    </a>
+                    <a href="{% url 'product_view' %}" class="btn btn-soft-info text-start">
+                        <i class="ri-shopping-bag-line me-2"></i> Products
+                    </a>
+                    <a href="{% url 'po_list' %}" class="btn btn-soft-warning text-start">
+                        <i class="ri-file-list-3-line me-2"></i> Purchase Orders
+                    </a>
+                    <a href="{% url 'order_list' %}" class="btn btn-soft-success text-start">
+                        <i class="ri-shopping-cart-2-line me-2"></i> Orders
+                    </a>
+                    <a href="{% url 'tailor_view' %}" class="btn btn-soft-secondary text-start">
+                        <i class="ri-scissors-line me-2"></i> Tailoring
+                    </a>
+                    <a href="{% url 'accounting_pl' %}" class="btn btn-soft-danger text-start">
+                        <i class="ri-money-dollar-circle-line me-2"></i> Accounting
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

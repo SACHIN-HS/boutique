@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block page_title %}Products{% endblock %}
+{% block breadcrumb %}Products{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="card-title mb-0">All Products ({{ products.count }})</h5>
+                <a href="{% url 'product_add' %}" class="btn btn-success btn-sm">
+                    <i class="ri-add-line me-1"></i> Add Product
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-centered align-middle table-nowrap mb-0">
+                        <thead class="text-muted">
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>SKU</th>
+                                <th>Qty</th>
+                                <th>Discount</th>
+                                <th>Sizes</th>
+                                <th>Colors</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in products %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if p.image %}
+                                        <img src="{{ p.image.url }}" alt="{{ p.name }}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-semibold">{{ p.name }}</div>
+                                            <small class="text-muted">/{{ p.slug }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ p.category }}</td>
+                                <td>{{ p.sku }}</td>
+                                <td>{{ p.qty }}</td>
+                                <td>{{ p.discount }}%</td>
+                                <td>{{ p.sizes|default:"-" }}</td>
+                                <td>{{ p.colors|default:"-" }}</td>
+                                <td>
+                                    <a href="{% url 'product_edit' p.pk %}" class="btn btn-soft-warning btn-sm">Edit</a>
+                                    <a href="{% url 'product_delete' p.pk %}" class="btn btn-soft-danger btn-sm"
+                                        onclick="return confirm('Delete {{ p.name }}?')">Delete</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="9" class="text-center text-muted py-4">No products yet. <a href="{% url 'product_add' %}">Add one</a>.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

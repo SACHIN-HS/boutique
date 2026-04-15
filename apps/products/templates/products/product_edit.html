@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block page_title %}Edit Product{% endblock %}
+{% block breadcrumb %}Edit Product{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header"><h5 class="card-title mb-0">Edit: {{ product.name }}</h5></div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Product Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category <span class="text-danger">*</span></label>
+                            <select name="category" class="form-select" required>
+                                {% for val, label in product.CATEGORY_CHOICES %}
+                                <option value="{{ val }}" {% if product.category == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">SKU <span class="text-danger">*</span></label>
+                            <input type="text" name="sku" class="form-control" value="{{ product.sku }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Slug URL</label>
+                            <input type="text" name="slug" class="form-control" value="{{ product.slug }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3">{{ product.description }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" name="qty" class="form-control" value="{{ product.qty }}" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Discount (%)</label>
+                            <input type="number" name="discount" class="form-control" value="{{ product.discount }}" min="0" max="100">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Sizes</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for sz in sizes %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="sizes" value="{{ sz }}" id="sz_{{ sz }}"
+                                        {% if sz in product.sizes %}checked{% endif %}>
+                                    <label class="form-check-label" for="sz_{{ sz }}">{{ sz }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Colors</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for c in colors %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="colors" value="{{ c }}" id="col_{{ c }}"
+                                        {% if c in product.colors %}checked{% endif %}>
+                                    <label class="form-check-label" for="col_{{ c }}">{{ c }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Meta Title</label>
+                            <input type="text" name="meta_title" class="form-control" value="{{ product.meta_title }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Meta Tags</label>
+                            <input type="text" name="meta_tags" class="form-control" value="{{ product.meta_tags }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Meta Description</label>
+                            <input type="text" name="meta_description" class="form-control" value="{{ product.meta_description }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Product Image</label>
+                            {% if product.image %}
+                            <div class="mb-2">
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="height:80px;border-radius:8px;">
+                            </div>
+                            {% endif %}
+                            <input type="file" name="image" class="form-control" accept="image/*">
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-success">Update Product</button>
+                            <a href="{% url 'product_view' %}" class="btn btn-light">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

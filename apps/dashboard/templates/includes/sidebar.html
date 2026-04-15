@@ -1,0 +1,196 @@
+{% load static %}
+<!-- ========== LEFT SIDEBAR ========== -->
+<div class="app-menu navbar-menu">
+
+    <!-- Sidebar Logo -->
+    {% comment %} <div class="navbar-brand-box">
+        <a href="{% url 'dashboard' %}" class="logo logo-dark">
+            <span class="logo-sm"><img src="{% static 'assets/images/logo-sm.png' %}" alt="" height="22"></span>
+            <span class="logo-lg"><img src="{% static 'assets/images/logo-dark.png' %}" alt="" height="17"></span>
+        </a>
+        <a href="{% url 'dashboard' %}" class="logo logo-light">
+            <span class="logo-sm"><img src="{% static 'assets/images/logo-sm.png' %}" alt="" height="22"></span>
+            <span class="logo-lg"><img src="{% static 'assets/images/logo-light.png' %}" alt="" height="17"></span>
+        </a>
+        <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
+            <i class="ri-record-circle-line"></i>
+        </button>
+    </div> {% endcomment %}
+    <div class="navbar-brand-box">
+        <a href="{% url 'dashboard' %}" class="logo logo-dark">
+            <span class="logo-sm"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="50"></span>
+            <span class="logo-lg"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="50"></span>
+        </a>
+        <a href="{% url 'dashboard' %}" class="logo logo-light">
+            <span class="logo-sm"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="50"></span>
+            <span class="logo-lg"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="50"></span>
+        </a>
+        <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
+            <i class="ri-record-circle-line"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar User Info -->
+    <div class="dropdown sidebar-user m-1 rounded">
+        <button type="button" class="btn material-shadow-none" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="d-flex align-items-center gap-2">
+                <img class="rounded header-profile-user" src="{% static 'assets/images/users/avatar-1.jpg' %}" alt="Avatar">
+                <span class="text-start">
+                    <span class="d-block fw-medium sidebar-user-name-text">
+                        {% if request.user.is_authenticated %}{{ request.user.get_full_name|default:request.user.username }}{% else %}Admin{% endif %}
+                    </span>
+                    <span class="d-block fs-14 sidebar-user-name-sub-text">
+                        <i class="ri ri-circle-fill fs-10 text-success align-baseline"></i>
+                        <span class="align-middle">Online</span>
+                    </span>
+                </span>
+            </span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end">
+            <h6 class="dropdown-header">Welcome {% if request.user.is_authenticated %}{{ request.user.username }}{% endif %}!</h6>
+            <a class="dropdown-item" href="{% url 'admin:index' %}"><i class="mdi mdi-shield-account text-muted fs-16 align-middle me-1"></i> Django Admin</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="{% url 'logout' %}"><i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> Logout</a>
+        </div>
+    </div>
+
+    <!-- Sidebar Menu -->
+    <div id="scrollbar">
+        <div class="container-fluid">
+            <div id="two-column-menu"></div>
+            <ul class="navbar-nav" id="navbar-nav">
+
+                <li class="menu-title"><span>Main Menu</span></li>
+
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                        <i class="ri-dashboard-2-line"></i> <span>Dashboard</span>
+                    </a>
+                </li>
+
+                <li class="menu-title"><span>E-Commerce</span></li>
+
+                <!-- Vendor -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link {% if 'vendor' in request.resolver_match.url_name %}active{% endif %}"
+                        href="#sidebarVendor" data-bs-toggle="collapse" role="button"
+                        aria-expanded="{% if 'vendor' in request.resolver_match.url_name %}true{% else %}false{% endif %}"
+                        aria-controls="sidebarVendor">
+                        <i class="ri-store-2-line"></i> <span>Vendor</span>
+                    </a>
+                    <div class="collapse menu-dropdown {% if 'vendor' in request.resolver_match.url_name %}show{% endif %}" id="sidebarVendor">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item"><a href="{% url 'vendor_add' %}" class="nav-link {% if request.resolver_match.url_name == 'vendor_add' %}active{% endif %}">Add Vendor</a></li>
+                            <li class="nav-item"><a href="{% url 'vendor_view' %}" class="nav-link {% if request.resolver_match.url_name == 'vendor_view' %}active{% endif %}">View Vendors</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Product -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link {% if 'product' in request.resolver_match.url_name %}active{% endif %}"
+                        href="#sidebarProduct" data-bs-toggle="collapse" role="button"
+                        aria-expanded="{% if 'product' in request.resolver_match.url_name %}true{% else %}false{% endif %}"
+                        aria-controls="sidebarProduct">
+                        <i class="ri-shopping-bag-line"></i> <span>Product</span>
+                    </a>
+                    <div class="collapse menu-dropdown {% if 'product' in request.resolver_match.url_name %}show{% endif %}" id="sidebarProduct">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item"><a href="{% url 'product_add' %}" class="nav-link {% if request.resolver_match.url_name == 'product_add' %}active{% endif %}">Add Product</a></li>
+                            <li class="nav-item"><a href="{% url 'product_view' %}" class="nav-link {% if request.resolver_match.url_name == 'product_view' %}active{% endif %}">View Products</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- SKU -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link {% if request.resolver_match.url_name == 'sku_center' %}active{% endif %}" href="{% url 'sku_center' %}">
+                        <i class="ri-barcode-line"></i> <span>SKU</span>
+                    </a>
+                </li>
+
+                <!-- Inventory -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}" href="{% url 'inventory' %}">
+                        <i class="ri-archive-line"></i> <span>Inventory</span>
+                    </a>
+                </li>
+
+                <!-- PO Order -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link {% if 'po' in request.resolver_match.url_name %}active{% endif %}"
+                        href="#sidebarPO" data-bs-toggle="collapse" role="button"
+                        aria-expanded="{% if 'po' in request.resolver_match.url_name %}true{% else %}false{% endif %}"
+                        aria-controls="sidebarPO">
+                        <i class="ri-file-list-3-line"></i> <span>PO Order</span>
+                    </a>
+                    <div class="collapse menu-dropdown {% if 'po' in request.resolver_match.url_name %}show{% endif %}" id="sidebarPO">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item"><a href="{% url 'po_create' %}" class="nav-link {% if request.resolver_match.url_name == 'po_create' %}active{% endif %}">Create PO</a></li>
+                            <li class="nav-item"><a href="{% url 'po_list' %}" class="nav-link {% if request.resolver_match.url_name == 'po_list' %}active{% endif %}">View POs</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Orders -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link {% if request.resolver_match.url_name == 'order_list' %}active{% endif %}" href="{% url 'order_list' %}">
+                        <i class="ri-shopping-cart-2-line"></i> <span>Orders</span>
+                    </a>
+                </li>
+
+                <!-- Tailoring -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link {% if 'tailor' in request.resolver_match.url_name %}active{% endif %}"
+                        href="#sidebarTailoring" data-bs-toggle="collapse" role="button"
+                        aria-expanded="{% if 'tailor' in request.resolver_match.url_name %}true{% else %}false{% endif %}"
+                        aria-controls="sidebarTailoring">
+                        <i class="ri-scissors-line"></i> <span>Tailoring</span>
+                    </a>
+                    <div class="collapse menu-dropdown {% if 'tailor' in request.resolver_match.url_name %}show{% endif %}" id="sidebarTailoring">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item"><a href="{% url 'tailor_add' %}" class="nav-link {% if request.resolver_match.url_name == 'tailor_add' %}active{% endif %}">Add Tailor</a></li>
+                            <li class="nav-item"><a href="{% url 'tailor_view' %}" class="nav-link {% if request.resolver_match.url_name == 'tailor_view' %}active{% endif %}">View Tailors & Jobs</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Accounting -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link {% if 'accounting' in request.resolver_match.url_name %}active{% endif %}"
+                        href="#sidebarAccounting" data-bs-toggle="collapse" role="button"
+                        aria-expanded="{% if 'accounting' in request.resolver_match.url_name %}true{% else %}false{% endif %}"
+                        aria-controls="sidebarAccounting">
+                        <i class="ri-money-dollar-circle-line"></i> <span>Accounting</span>
+                    </a>
+                    <div class="collapse menu-dropdown {% if 'accounting' in request.resolver_match.url_name %}show{% endif %}" id="sidebarAccounting">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item"><a href="{% url 'accounting_pl' %}" class="nav-link {% if request.resolver_match.url_name == 'accounting_pl' %}active{% endif %}">Profit & Loss</a></li>
+                            <li class="nav-item"><a href="{% url 'accounting_expenses' %}" class="nav-link {% if request.resolver_match.url_name == 'accounting_expenses' %}active{% endif %}">Expenses</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="menu-title"><i class="ri-more-fill"></i> <span>Account</span></li>
+
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarAuth" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAuth">
+                        <i class="ri-account-circle-line"></i> <span>Authentication</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarAuth">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item"><a href="{% url 'login' %}" class="nav-link">Sign In</a></li>
+                            <li class="nav-item"><a href="{% url 'register' %}" class="nav-link">Sign Up</a></li>
+                            <li class="nav-item"><a href="{% url 'logout' %}" class="nav-link">Logout</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+
+    <div class="sidebar-background"></div>
+</div>
+<!-- ========== END LEFT SIDEBAR ========== -->

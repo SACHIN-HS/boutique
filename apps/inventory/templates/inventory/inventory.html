@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block page_title %}Inventory{% endblock %}
+{% block breadcrumb %}Inventory{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-1">Store Inventory</p>
+                <h4 class="fs-22 fw-semibold">{% for r in store_items %}{% if forloop.first %}{{ r.qty }}{% endif %}{% empty %}0{% endfor %}
+                    {% if store_items|length > 1 %}+ more{% endif %}
+                </h4>
+                <small class="text-muted">{{ store_items|length }} line(s)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-1">Website Inventory</p>
+                <h4 class="fs-22 fw-semibold">{{ website_items|length }} line(s)</h4>
+                <small class="text-muted">Moved from store</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Store Inventory -->
+<div class="card mb-3">
+    <div class="card-header"><h5 class="card-title mb-0">Store Inventory</h5></div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="text-muted">
+                    <tr><th>Item</th><th>PO</th><th>Vendor</th><th>Colors</th><th>Sizes</th><th>Store Qty</th><th>Move to Website</th></tr>
+                </thead>
+                <tbody>
+                    {% for r in store_items %}
+                    <tr>
+                        <td class="fw-semibold">{{ r.item.name }}</td>
+                        <td>{{ r.item.purchase_order.po_number }}</td>
+                        <td>{{ r.item.purchase_order.vendor.name }}</td>
+                        <td>{{ r.item.colors }}</td>
+                        <td>{{ r.item.sizes }}</td>
+                        <td>{{ r.qty }}</td>
+                        <td>
+                            <form method="post" class="d-flex gap-2 align-items-center">
+                                {% csrf_token %}
+                                <input type="hidden" name="item_pk" value="{{ r.item.pk }}">
+                                <input type="hidden" name="direction" value="to_website">
+                                <input type="number" name="qty" class="form-control form-control-sm" style="width:80px" value="1" min="1" max="{{ r.qty }}">
+                                <button type="submit" class="btn btn-soft-primary btn-sm">To Website</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">No store inventory. Verify PO and mark SKU printed.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Website Inventory -->
+<div class="card">
+    <div class="card-header"><h5 class="card-title mb-0">Website Inventory</h5></div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="text-muted">
+                    <tr><th>Item</th><th>PO</th><th>Vendor</th><th>Colors</th><th>Sizes</th><th>Website Qty</th><th>Move to Store</th></tr>
+                </thead>
+                <tbody>
+                    {% for r in website_items %}
+                    <tr>
+                        <td class="fw-semibold">{{ r.item.name }}</td>
+                        <td>{{ r.item.purchase_order.po_number }}</td>
+                        <td>{{ r.item.purchase_order.vendor.name }}</td>
+                        <td>{{ r.item.colors }}</td>
+                        <td>{{ r.item.sizes }}</td>
+                        <td>{{ r.qty }}</td>
+                        <td>
+                            <form method="post" class="d-flex gap-2 align-items-center">
+                                {% csrf_token %}
+                                <input type="hidden" name="item_pk" value="{{ r.item.pk }}">
+                                <input type="hidden" name="direction" value="to_store">
+                                <input type="number" name="qty" class="form-control form-control-sm" style="width:80px" value="1" min="1" max="{{ r.qty }}">
+                                <button type="submit" class="btn btn-soft-warning btn-sm">To Store</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">No website inventory. Move items from store.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

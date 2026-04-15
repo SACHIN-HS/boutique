@@ -1,0 +1,34 @@
+{% load static %}
+<!-- ========== HEAD / CSS ========== -->
+<meta charset="utf-8" />
+<title>{% block title %}Admin Panel{% endblock %} | My Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta content="My Custom Admin Panel" name="description" />
+
+<!-- Favicon -->
+<link rel="shortcut icon" href="{% static 'assets/images/favicon.ico' %}">
+
+<!-- Vector Map CSS -->
+<link href="{% static 'assets/libs/jsvectormap/jsvectormap.min.css' %}" rel="stylesheet" type="text/css" />
+
+<!-- Swiper CSS -->
+<link href="{% static 'assets/libs/swiper/swiper-bundle.min.css' %}" rel="stylesheet" type="text/css" />
+
+<!-- Layout Config JS (must be before CSS) -->
+<script src="{% static 'assets/js/layout.js' %}"></script>
+
+<!-- Bootstrap CSS -->
+<link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
+
+<!-- Icons CSS -->
+<link href="{% static 'assets/css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+
+<!-- App CSS -->
+<link href="{% static 'assets/css/app.min.css' %}" rel="stylesheet" type="text/css" />
+
+<!-- Custom CSS -->
+<link href="{% static 'assets/css/custom.min.css' %}" rel="stylesheet" type="text/css" />
+
+<!-- Extra CSS (child templates inject karte hain) -->
+{% block extra_css %}{% endblock %}
+<!-- ========== END HEAD ========== -->

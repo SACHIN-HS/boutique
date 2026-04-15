@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block page_title %}Tailoring{% endblock %}
+{% block breadcrumb %}Tailoring{% endblock %}
+
+{% block content %}
+<!-- Tailors -->
+<div class="card mb-3">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h5 class="card-title mb-0">Tailors ({{ tailors.count }})</h5>
+        <a href="{% url 'tailor_add' %}" class="btn btn-success btn-sm"><i class="ri-add-line me-1"></i> Add Tailor</a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="text-muted">
+                    <tr><th>#</th><th>Name</th><th>Phone</th><th>Address</th></tr>
+                </thead>
+                <tbody>
+                    {% for t in tailors %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="fw-semibold">{{ t.name }}</td>
+                        <td>{{ t.phone }}</td>
+                        <td>{{ t.address }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted py-4">No tailors yet. <a href="{% url 'tailor_add' %}">Add one</a>.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tailoring Jobs -->
+<div class="card">
+    <div class="card-header"><h5 class="card-title mb-0">Tailoring Jobs ({{ jobs.count }})</h5></div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="text-muted">
+                    <tr>
+                        <th>Job No</th>
+                        <th>Order</th>
+                        <th>Tailor</th>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Status</th>
+                        <th>Expected</th>
+                        <th>Time</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <td class="fw-semibold">{{ job.job_no }}</td>
+                        <td>{{ job.order_item.order.order_no }}</td>
+                        <td>{{ job.tailor.name }}</td>
+                        <td>{{ job.order_item.name }}</td>
+                        <td>{{ job.qty }}</td>
+                        <td>
+                            {% if job.status == 'Delivered' %}
+                            <span class="badge bg-success-subtle text-success">Delivered</span>
+                            {% elif job.status == 'Done' %}
+                            <span class="badge bg-info-subtle text-info">Done</span>
+                            {% else %}
+                            <span class="badge bg-warning-subtle text-warning">Assigned</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ job.expected_at|date:"d M Y"|default:"-" }}</td>
+                        <td>{{ job.expected_time|default:"-" }}</td>
+                        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ job.notes }}">{{ job.notes|default:"-" }}</td>
+                        <td>
+                            <form method="post" action="{% url 'tailor_job_action' job.pk %}" class="d-flex gap-1">
+                                {% csrf_token %}
+                                {% if job.status != 'Done' and job.status != 'Delivered' %}
+                                <button type="submit" name="action" value="done" class="btn btn-soft-info btn-sm">Mark Done</button>
+                                {% endif %}
+                                {% if job.status != 'Delivered' %}
+                                <button type="submit" name="action" value="delivered" class="btn btn-soft-success btn-sm">Delivered</button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="10" class="text-center text-muted py-4">No tailoring jobs yet. Send orders to tailor from Orders page.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
