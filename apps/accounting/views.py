@@ -5,7 +5,7 @@ from django.db.models import Sum, F
 
 from .models import Expense
 from apps.orders.models import OrderItem
-from apps.vendors.models import POItem
+from apps.vendors.models import PurchaseOrderItem
 
 
 @login_required(login_url='login')
@@ -14,7 +14,7 @@ def accounting_pl(request):
     date_to = request.GET.get('to', '')
 
     orders_qs = OrderItem.objects.select_related('order')
-    pos_qs = POItem.objects.select_related('purchase_order')
+    pos_qs = PurchaseOrderItem.objects.select_related('purchase_order')
     expenses_qs = Expense.objects.all()
 
     if date_from:

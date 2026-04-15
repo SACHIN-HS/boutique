@@ -60,8 +60,7 @@
             <div id="two-column-menu"></div>
             <ul class="navbar-nav" id="navbar-nav">
 
-                <li class="menu-title"><span>Main Menu</span></li>
-
+               
                 <!-- Dashboard -->
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
@@ -69,8 +68,7 @@
                     </a>
                 </li>
 
-                <li class="menu-title"><span>E-Commerce</span></li>
-
+                
                 <!-- Vendor -->
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if 'vendor' in request.resolver_match.url_name %}active{% endif %}"
@@ -127,7 +125,6 @@
                     </a>
                     <div class="collapse menu-dropdown {% if 'po' in request.resolver_match.url_name %}show{% endif %}" id="sidebarPO">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item"><a href="{% url 'po_create' %}" class="nav-link {% if request.resolver_match.url_name == 'po_create' %}active{% endif %}">Create PO</a></li>
                             <li class="nav-item"><a href="{% url 'po_list' %}" class="nav-link {% if request.resolver_match.url_name == 'po_list' %}active{% endif %}">View POs</a></li>
                         </ul>
                     </div>
@@ -172,20 +169,7 @@
                     </div>
                 </li>
 
-                <li class="menu-title"><i class="ri-more-fill"></i> <span>Account</span></li>
-
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarAuth" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarAuth">
-                        <i class="ri-account-circle-line"></i> <span>Authentication</span>
-                    </a>
-                    <div class="collapse menu-dropdown" id="sidebarAuth">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item"><a href="{% url 'login' %}" class="nav-link">Sign In</a></li>
-                            <li class="nav-item"><a href="{% url 'register' %}" class="nav-link">Sign Up</a></li>
-                            <li class="nav-item"><a href="{% url 'logout' %}" class="nav-link">Logout</a></li>
-                        </ul>
-                    </div>
-                </li>
+                   
 
             </ul>
         </div>

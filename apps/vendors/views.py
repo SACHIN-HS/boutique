@@ -3,9 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
 from django.utils import timezone
+from django.contrib.auth.hashers import make_password, check_password
+from .models import Vendor, PurchaseOrder, PurchaseOrderItem, PurchaseOrderVerification
 
-from .models import Vendor, PurchaseOrder, POItem
 
+# --- Admin Views ---
 
 @login_required(login_url='login')
 def vendor_add(request):
@@ -14,18 +16,47 @@ def vendor_add(request):
         email = request.POST.get('email', '').strip()
         phone = request.POST.get('phone', '').strip()
         address = request.POST.get('address', '').strip()
-        if name and email and phone and address:
-            Vendor.objects.create(name=name, email=email, phone=phone, address=address)
-            messages.success(request, 'Vendor saved successfully!')
+        password = request.POST.get('password', '').strip()
+        
+        if name and email and address and password:
+            vendor = Vendor.objects.create(
+                name=name, email=email, phone=phone, 
+                address=address, password_hash=make_password(password)
+            )
+            messages.success(request, f'Vendor {name} created successfully!')
             return redirect('vendor_view')
-        messages.error(request, 'Please fill all fields.')
+        messages.error(request, 'Please fill all mandatory fields.')
     return render(request, 'vendors/vendor_add.html')
 
 
 @login_required(login_url='login')
 def vendor_view(request):
     vendors = Vendor.objects.order_by('-created_at')
+    # Pre-calculating portal links for convenience
+    host = request.get_host()
+    for v in vendors:
+        v.portal_url = f"http://{host}/vendors/portal/{v.portal_token}/"
     return render(request, 'vendors/vendor_view.html', {'vendors': vendors})
+
+
+@login_required(login_url='login')
+def vendor_edit(request, pk):
+    vendor = get_object_or_404(Vendor, pk=pk)
+    if request.method == 'POST':
+        vendor.name = request.POST.get('name', '').strip()
+        vendor.email = request.POST.get('email', '').strip()
+        vendor.phone = request.POST.get('phone', '').strip()
+        vendor.address = request.POST.get('address', '').strip()
+        vendor.is_active = request.POST.get('is_active') == 'on'
+        
+        password = request.POST.get('password', '').strip()
+        if password:
+            vendor.password_hash = make_password(password)
+            
+        vendor.save()
+        messages.success(request, f'Vendor {vendor.name} updated successfully!')
+        return redirect('vendor_view')
+    return render(request, 'vendors/vendor_edit.html', {'vendor': vendor})
 
 
 @login_required(login_url='login')
@@ -44,45 +75,48 @@ def po_list(request):
         pos = pos.filter(created_at__date__gte=date_from)
     if date_to:
         pos = pos.filter(created_at__date__lte=date_to)
-    total_value = pos.aggregate(t=Sum('total'))['t'] or 0
+    
+    total_value = pos.aggregate(t=Sum('grand_total'))['t'] or 0
     return render(request, 'orders/po_list.html', {
         'pos': pos, 'total_value': total_value,
         'date_from': date_from, 'date_to': date_to,
     })
 
 
+
 @login_required(login_url='login')
 def po_create(request):
-    vendors = Vendor.objects.order_by('name')
+    # This remains as an admin-side manual PO creation tool if needed
+    vendors = Vendor.objects.filter(is_active=True).order_by('name')
     if request.method == 'POST':
         vendor_id = request.POST.get('vendor')
         vendor = get_object_or_404(Vendor, pk=vendor_id)
         po_number = f"PO-{int(timezone.now().timestamp())}"
-        po = PurchaseOrder.objects.create(vendor=vendor, po_number=po_number)
+        po = PurchaseOrder.objects.create(vendor=vendor, po_number=po_number, status="Submitted")
 
         names = request.POST.getlist('item_name')
         categories = request.POST.getlist('item_category')
         qtys = request.POST.getlist('item_qty')
         prices = request.POST.getlist('item_price')
-        colors_list = request.POST.getlist('item_colors')
-        sizes_list = request.POST.getlist('item_sizes')
+        colors = request.POST.getlist('item_color')
+        sizes = request.POST.getlist('item_size')
 
-        total = 0
+        grand_total = 0
         for i, name in enumerate(names):
             if not name.strip():
                 continue
             qty = int(qtys[i] or 0)
             price = float(prices[i] or 0)
-            line_total = qty * price
-            total += line_total
-            POItem.objects.create(
-                purchase_order=po, name=name.strip(),
+            total_val = qty * price
+            grand_total += total_val
+            PurchaseOrderItem.objects.create(
+                purchase_order=po, item_name=name.strip(),
                 category=categories[i] if i < len(categories) else '',
-                qty=qty, price=price, line_total=line_total,
-                colors=colors_list[i] if i < len(colors_list) else '',
-                sizes=sizes_list[i] if i < len(sizes_list) else '',
+                qty=qty, unit_price=price, total_value=total_val,
+                color=colors[i] if i < len(colors) else '',
+                size=sizes[i] if i < len(sizes) else '',
             )
-        po.total = total
+        po.grand_total = grand_total
         po.save()
         messages.success(request, f'Purchase Order {po_number} created!')
         return redirect('po_list')
@@ -91,21 +125,90 @@ def po_create(request):
 
 @login_required(login_url='login')
 def po_receive(request, pk):
+    # This could be adapted for the verification step
     po = get_object_or_404(PurchaseOrder, pk=pk)
     if request.method == 'POST':
-        received_ids = request.POST.getlist('received')
-        po.items.all().update(received=False)
-        if received_ids:
-            po.items.filter(pk__in=received_ids).update(received=True)
-        total = po.items.count()
-        received_count = po.items.filter(received=True).count()
-        if received_count == 0:
-            po.status = 'Pending'
-        elif received_count < total:
-            po.status = 'Partial'
-        else:
-            po.status = 'Verified'
+        status = request.POST.get('status')
+        notes = request.POST.get('admin_notes', '')
+        po.status = status
+        po.remarks = notes
         po.save()
-        messages.success(request, 'PO receipt updated!')
+        
+        PurchaseOrderVerification.objects.create(
+            po=po, status=status, admin_notes=notes, 
+            verified_by=request.user.username
+        )
+        
+        messages.success(request, f'PO {po.po_number} status updated to {status}!')
         return redirect('po_list')
     return render(request, 'vendors/po_receive.html', {'po': po})
+
+
+# --- Vendor Portal Views ---
+
+def portal_login(request, token):
+    vendor = get_object_or_404(Vendor, portal_token=token, is_active=True)
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        if email == vendor.email and check_password(password, vendor.password_hash):
+            request.session['vendor_id'] = vendor.id
+            return redirect('portal_dashboard', token=token)
+        messages.error(request, "Invalid email or password.")
+    return render(request, 'vendors/portal_login.html', {'vendor': vendor})
+
+def check_vendor_session(request, token):
+    vendor_id = request.session.get('vendor_id')
+    if not vendor_id:
+        return None
+    vendor = Vendor.objects.filter(id=vendor_id, portal_token=token, is_active=True).first()
+    return vendor
+
+def portal_dashboard(request, token):
+    vendor = check_vendor_session(request, token)
+    if not vendor:
+        return redirect('portal_login', token=token)
+    
+    if request.method == 'POST':
+        po_number = f"PO-{vendor.id}-{int(timezone.now().timestamp())}"
+        po = PurchaseOrder.objects.create(vendor=vendor, po_number=po_number, status="Submitted")
+        
+        names = request.POST.getlist('item_name')
+        categories = request.POST.getlist('item_category')
+        colors = request.POST.getlist('item_color')
+        sizes = request.POST.getlist('item_size')
+        qtys = request.POST.getlist('item_qty')
+        prices = request.POST.getlist('item_price')
+        
+        grand_total = 0
+        for i, name in enumerate(names):
+            if not name.strip(): continue
+            qty = int(qtys[i] or 0)
+            price = float(prices[i] or 0)
+            total_val = qty * price
+            grand_total += total_val
+            
+            PurchaseOrderItem.objects.create(
+                purchase_order=po, item_name=name, category=categories[i],
+                color=colors[i], size=sizes[i], qty=qty, unit_price=price,
+                total_value=total_val
+            )
+        po.grand_total = grand_total
+        po.save()
+        messages.success(request, f"Purchase Order {po_number} submitted successfully!")
+        return redirect('portal_history', token=token)
+        
+    return render(request, 'vendors/portal_dashboard.html', {'vendor': vendor})
+
+def portal_history(request, token):
+    vendor = check_vendor_session(request, token)
+    if not vendor:
+        return redirect('portal_login', token=token)
+    
+    pos = PurchaseOrder.objects.filter(vendor=vendor).prefetch_related('items').order_by('-created_at')
+    return render(request, 'vendors/portal_history.html', {'vendor': vendor, 'pos': pos})
+
+def portal_logout(request, token):
+    if 'vendor_id' in request.session:
+        del request.session['vendor_id']
+    return redirect('portal_login', token=token)

@@ -1,0 +1,53 @@
+{% extends 'dashboard/base.html' %}
+{% block page_title %}Edit Vendor{% endblock %}
+{% block breadcrumb %}Edit Vendor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="card-title mb-0">Edit Details: {{ vendor.name }}</h5>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="is_active" id="isActiveSwitch" form="edit-form" {% if vendor.is_active %}checked{% endif %}>
+                    <label class="form-check-label" for="isActiveSwitch">Active</label>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post" id="edit-form">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" value="{{ vendor.name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control" value="{{ vendor.email }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" class="form-control" value="{{ vendor.phone }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Address <span class="text-danger">*</span></label>
+                            <input type="text" name="address" class="form-control" value="{{ vendor.address }}" required>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="alert alert-info border-0 mb-3">
+                                <i class="ri-information-line me-2"></i> Leave password blank if you don't want to change it.
+                            </div>
+                            <label class="form-label text-primary fw-bold">Reset Portal Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Enter new password to reset">
+                        </div>
+                        <div class="col-12 d-flex gap-2 pt-3">
+                            <button type="submit" class="btn btn-primary">Update Vendor</button>
+                            <a href="{% url 'vendor_view' %}" class="btn btn-light">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
