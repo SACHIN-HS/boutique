@@ -1,4 +1,4 @@
-{% extends 'dashboard/base.html' %}
+{% extends 'base.html' %}
 {% block page_title %}Create Purchase Order{% endblock %}
 {% block breadcrumb %}Create PO{% endblock %}
 
@@ -19,7 +19,7 @@
                             <select name="vendor" class="form-select" required>
                                 <option value="" disabled selected>Select vendor</option>
                                 {% for v in vendors %}
-                                <option value="{{ v.pk }}" {% if request.GET.vendor == v.pk|stringformat:"s" %}selected{% endif %}>{{ v.name }}</option>
+                                <option value="{{ v.pk }}">{{ v.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -44,19 +44,19 @@
                             </div>
                             <div class="col-md-1">
                                 <label class="form-label">Qty</label>
-                                <input type="number" name="item_qty" class="form-control qty-input" value="1" min="1">
+                                <input type="number" name="item_qty" class="form-control" value="1" min="1">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Price</label>
-                                <input type="number" name="item_price" class="form-control price-input" value="0" step="0.01" min="0">
+                                <input type="number" name="item_price" class="form-control" value="0" step="0.01" min="0">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">Colors</label>
-                                <input type="text" name="item_colors" class="form-control" placeholder="Red, Blue">
+                                <label class="form-label">Color</label>
+                                <input type="text" name="item_color" class="form-control" placeholder="Red, Blue">
                             </div>
                             <div class="col-md-1">
-                                <label class="form-label">Sizes</label>
-                                <input type="text" name="item_sizes" class="form-control" placeholder="M, L">
+                                <label class="form-label">Size</label>
+                                <input type="text" name="item_size" class="form-control" placeholder="M, L">
                             </div>
                             <div class="col-md-1">
                                 <label class="form-label">&nbsp;</label>

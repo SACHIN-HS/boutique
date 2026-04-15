@@ -23,6 +23,7 @@
                                 <th>Phone</th>
                                 <th>Address</th>
                                 <th>Created</th>
+                                <th>Portal Link</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -36,13 +37,18 @@
                                 <td>{{ v.address }}</td>
                                 <td>{{ v.created_at|date:"d M Y" }}</td>
                                 <td>
-                                    <a href="{% url 'po_create' %}?vendor={{ v.pk }}" class="btn btn-soft-info btn-sm">Create PO</a>
+                                    <button class="btn btn-soft-secondary btn-sm" onclick="copyPortalLink('{{ v.portal_url }}')">
+                                        <i class="ri-links-line me-1"></i> Copy Link
+                                    </button>
+                                </td>
+                                <td>
+                                    <a href="{% url 'vendor_edit' v.pk %}" class="btn btn-soft-primary btn-sm">Edit</a>
                                     <a href="{% url 'vendor_delete' v.pk %}" class="btn btn-soft-danger btn-sm"
                                         onclick="return confirm('Delete {{ v.name }}?')">Delete</a>
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="7" class="text-center text-muted py-4">No vendors yet. <a href="{% url 'vendor_add' %}">Add one</a>.</td></tr>
+                            <tr><td colspan="8" class="text-center text-muted py-4">No vendors yet. <a href="{% url 'vendor_add' %}">Add one</a>.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -51,4 +57,22 @@
         </div>
     </div>
 </div>
+
+<script>
+function copyPortalLink(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        alert('Portal Link copied to clipboard!');
+    }).catch(err => {
+        console.error('Could not copy text: ', err);
+        // Fallback
+        const el = document.createElement('textarea');
+        el.value = url;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        alert('Portal Link copied to clipboard!');
+    });
+}
+</script>
 {% endblock %}

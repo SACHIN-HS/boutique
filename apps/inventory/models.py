@@ -4,7 +4,7 @@ from django.db import models
 class InventoryMove(models.Model):
     FROM_CHOICES = [("store", "Store"), ("website", "Website")]
     TO_CHOICES = [("store", "Store"), ("website", "Website")]
-    po_item = models.ForeignKey('vendors.POItem', on_delete=models.CASCADE, related_name="moves")
+    po_item = models.ForeignKey('vendors.PurchaseOrderItem', on_delete=models.CASCADE, related_name="moves")
     from_location = models.CharField(max_length=10, choices=FROM_CHOICES)
     to_location = models.CharField(max_length=10, choices=TO_CHOICES)
     qty = models.PositiveIntegerField()

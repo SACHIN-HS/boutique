@@ -5,7 +5,7 @@ from django.utils.text import slugify
 import datetime
 
 from .models import Product
-from apps.vendors.models import PurchaseOrder, POItem
+from apps.vendors.models import PurchaseOrder, PurchaseOrderItem
 
 
 @login_required(login_url='login')
@@ -107,7 +107,7 @@ def sku_center(request):
 
 @login_required(login_url='login')
 def sku_mark_printed(request, item_pk):
-    item = get_object_or_404(POItem, pk=item_pk)
+    item = get_object_or_404(PurchaseOrderItem, pk=item_pk)
     item.sku_printed = True
     item.save()
     messages.success(request, f'SKU marked as printed for {item.name}.')

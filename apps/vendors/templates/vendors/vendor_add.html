@@ -27,6 +27,10 @@
                             <label class="form-label">Address <span class="text-danger">*</span></label>
                             <input type="text" name="address" class="form-control" placeholder="Street, city, state" required>
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Portal Password <span class="text-danger">*</span></label>
+                            <input type="password" name="password" class="form-control" placeholder="Create password for vendor" required>
+                        </div>
                         <div class="col-12 d-flex gap-2">
                             <button type="submit" class="btn btn-success">Save Vendor</button>
                             <a href="{% url 'vendor_view' %}" class="btn btn-light">View Vendors</a>

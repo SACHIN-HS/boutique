@@ -3,13 +3,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
 
-from apps.vendors.models import POItem
+from apps.vendors.models import PurchaseOrderItem
 from .models import InventoryMove
 
 
 @login_required(login_url='login')
 def inventory(request):
-    printed_items = POItem.objects.filter(
+    printed_items = PurchaseOrderItem.objects.filter(
         sku_printed=True, purchase_order__status='Verified'
     ).select_related('purchase_order__vendor')
 
@@ -30,7 +30,7 @@ def inventory(request):
         direction = request.POST.get('direction')
         qty = int(request.POST.get('qty', 0) or 0)
         if item_pk and direction and qty > 0:
-            item = get_object_or_404(POItem, pk=item_pk)
+            item = get_object_or_404(PurchaseOrderItem, pk=item_pk)
             if direction == 'to_website':
                 InventoryMove.objects.create(po_item=item, from_location='store', to_location='website', qty=qty)
             elif direction == 'to_store':
