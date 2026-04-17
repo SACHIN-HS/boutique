@@ -36,10 +36,9 @@
                                 <label class="form-label">Category</label>
                                 <select name="item_category" class="form-select">
                                     <option value="">Select</option>
-                                    <option value="Men">Men</option>
-                                    <option value="Women">Women</option>
-                                    <option value="Kids">Kids</option>
-                                    <option value="Jewelry">Jewelry</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category }}">{{ category }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-1">
@@ -56,7 +55,12 @@
                             </div>
                             <div class="col-md-1">
                                 <label class="form-label">Size</label>
-                                <input type="text" name="item_size" class="form-control" placeholder="M, L">
+                                <select name="item_size" class="form-select">
+                                    <option value="">Select</option>
+                                    {% for size in sizes %}
+                                    <option value="{{ size }}">{{ size }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                             <div class="col-md-1">
                                 <label class="form-label">&nbsp;</label>

@@ -19,10 +19,9 @@
                             <label class="form-label">Category <span class="text-danger">*</span></label>
                             <select name="category" class="form-select" required>
                                 <option value="" disabled selected>Select category</option>
-                                <option value="Men">Men</option>
-                                <option value="Women">Women</option>
-                                <option value="Kids">Kids</option>
-                                <option value="Jewelry">Jewelry</option>
+                                {% for category in categories %}
+                                <option value="{{ category }}">{{ category }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6">

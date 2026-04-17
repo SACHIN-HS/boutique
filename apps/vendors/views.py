@@ -5,6 +5,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password, check_password
 from .models import Vendor, PurchaseOrder, PurchaseOrderItem, PurchaseOrderVerification
+from apps.products.models import VariantCategory, VariantSize
 
 
 # --- Admin Views ---
@@ -71,15 +72,32 @@ def po_list(request):
     pos = PurchaseOrder.objects.select_related('vendor').prefetch_related('items').order_by('-created_at')
     date_from = request.GET.get('from', '')
     date_to = request.GET.get('to', '')
+    selected_po = None
+    selected_po_id = request.GET.get('po', '')
     if date_from:
         pos = pos.filter(created_at__date__gte=date_from)
     if date_to:
         pos = pos.filter(created_at__date__lte=date_to)
+
+    if selected_po_id:
+        try:
+            selected_po = pos.filter(id=int(selected_po_id)).first()
+        except (TypeError, ValueError):
+            selected_po = None
     
     total_value = pos.aggregate(t=Sum('grand_total'))['t'] or 0
+    stock_summary = (
+        PurchaseOrderItem.objects
+        .filter(purchase_order__in=pos)
+        .values('item_name', 'category', 'color', 'size')
+        .annotate(total_qty=Sum('qty'), total_value=Sum('total_value'))
+        .order_by('item_name', 'category', 'color', 'size')
+    )
     return render(request, 'orders/po_list.html', {
         'pos': pos, 'total_value': total_value,
+        'stock_summary': stock_summary,
         'date_from': date_from, 'date_to': date_to,
+        'selected_po': selected_po,
     })
 
 
@@ -120,7 +138,11 @@ def po_create(request):
         po.save()
         messages.success(request, f'Purchase Order {po_number} created!')
         return redirect('po_list')
-    return render(request, 'vendors/po_create.html', {'vendors': vendors})
+    return render(request, 'vendors/po_create.html', {
+        'vendors': vendors,
+        'categories': VariantCategory.objects.values_list('name', flat=True),
+        'sizes': VariantSize.objects.values_list('name', flat=True),
+    })
 
 
 @login_required(login_url='login')
@@ -198,7 +220,11 @@ def portal_dashboard(request, token):
         messages.success(request, f"Purchase Order {po_number} submitted successfully!")
         return redirect('portal_history', token=token)
         
-    return render(request, 'vendors/portal_dashboard.html', {'vendor': vendor})
+    return render(request, 'vendors/portal_dashboard.html', {
+        'vendor': vendor,
+        'categories': VariantCategory.objects.values_list('name', flat=True),
+        'sizes': VariantSize.objects.values_list('name', flat=True),
+    })
 
 def portal_history(request, token):
     vendor = check_vendor_session(request, token)
@@ -212,3 +238,4 @@ def portal_logout(request, token):
     if 'vendor_id' in request.session:
         del request.session['vendor_id']
     return redirect('portal_login', token=token)
+

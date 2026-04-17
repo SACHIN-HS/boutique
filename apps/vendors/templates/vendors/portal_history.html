@@ -2,6 +2,80 @@
 
 {% block title %}Order History{% endblock %}
 
+{% block extra_css %}
+<style>
+    .order-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .order-row:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .detail-row {
+        background-color: #f8f9fa;
+        display: none;
+    }
+
+    .detail-row.show {
+        display: table-row;
+    }
+
+    .toggle-btn {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #eee;
+        transition: transform 0.3s;
+    }
+
+    .toggle-btn.active {
+        transform: rotate(45deg);
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 50rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .badge-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-received {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-verified {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-defective {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .table-detail {
+        margin: 1rem 0;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -15,78 +89,124 @@
             </a>
         </div>
 
-        {% for po in pos %}
-        <div class="card mb-4 border-start border-4 {% if po.status == 'Verified' %}border-success{% elif po.status == 'Rejected' %}border-danger{% elif po.status == 'Submitted' %}border-warning{% else %}border-secondary{% endif %}">
-            <div class="card-header bg-transparent py-3">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <span class="text-muted small text-uppercase fw-bold">PO Number</span>
-                        <h5 class="fw-bold mb-0 text-primary">{{ po.po_number }}</h5>
-                    </div>
-                    <div class="text-end">
-                        <span class="text-muted small text-uppercase d-block mb-1">Status</span>
-                        <span class="status-badge badge-{{ po.status|lower }}">{{ po.status }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-sm table-nowrap align-middle mb-0">
-                        <thead>
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
                             <tr>
-                                <th>Item Name</th>
-                                <th>Category</th>
-                                <th>Color</th>
-                                <th>Size</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Unit Price</th>
-                                <th class="text-end">Total</th>
+                                <th style="width: 50px;"></th>
+                                <th>PO Number</th>
+                                <th>Items</th>
+                                <th>Created</th>
+                                <th>Status</th>
+                                <th class="text-end">Total Price</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for item in po.items.all %}
+                            {% for po in pos %}
+                            <tr class="order-row" onclick="toggleDetails('po-{{ po.id }}', this)">
+                                <td class="text-center">
+                                    <div class="toggle-btn" id="btn-po-{{ po.id }}">
+                                        <i class="ri-add-line"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-primary">{{ po.po_number }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-soft-secondary text-secondary">{{ po.items.count }}
+                                        Items</span>
+                                </td>
+                                <td class="text-muted">
+                                    {{ po.created_at|date:"M d, Y" }}
+                                </td>
+                                <td>
+                                    <span class="status-badge badge-{{ po.status|lower }}">{{ po.status }}</span>
+                                </td>
+                                <td class="text-end fw-bold">
+                                    ${{ po.grand_total }}
+                                </td>
+                            </tr>
+                            <tr class="detail-row" id="po-{{ po.id }}">
+                                <td colspan="6" class="p-4">
+                                    <div class="table-detail">
+                                        <table class="table table-sm mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Item Name</th>
+                                                    <th>Category</th>
+                                                    <th>Color / Size</th>
+                                                    <th class="text-center">Qty</th>
+                                                    <th class="text-end">Unit Price</th>
+                                                    <th class="text-end">Total</th>
+                                                    <th class="text-center">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in po.items.all %}
+                                                <tr>
+                                                    <td class="fw-medium">{{ item.item_name }}</td>
+                                                    <td>{{ item.category }}</td>
+                                                    <td>{{ item.color }} / {{ item.size }}</td>
+                                                    <td class="text-center">{{ item.qty }}</td>
+                                                    <td class="text-end">${{ item.unit_price }}</td>
+                                                    <td class="text-end fw-bold">${{ item.total_value }}</td>
+                                                    <td class="text-center">
+                                                        <span class="status-badge badge-{{ item.status|lower }}">{{
+                                                            item.status }}</span>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                            {% if po.remarks %}
+                                            <tfoot>
+                                                <tr>
+                                                    <td colspan="7" class="bg-light-subtle py-2 px-3">
+                                                        <small class="text-muted"><strong>Admin Remarks:</strong> {{
+                                                            po.remarks }}</small>
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                            {% endif %}
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
                             <tr>
-                                <td class="fw-medium">{{ item.item_name }}</td>
-                                <td>{{ item.category }}</td>
-                                <td>{{ item.color }}</td>
-                                <td>{{ item.size }}</td>
-                                <td class="text-center">{{ item.qty }}</td>
-                                <td class="text-end">${{ item.unit_price }}</td>
-                                <td class="text-end fw-bold">${{ item.total_value }}</td>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="ri-file-list-3-line ri-3x text-muted opacity-25"></i>
+                                    </div>
+                                    <h5 class="text-muted">No purchase orders found.</h5>
+                                    <p class="text-muted small">When you submit items, they will appear here.</p>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
-                        <tfoot>
-                            <tr class="bg-light">
-                                <td colspan="6" class="text-end fw-bold">Grand Total</td>
-                                <td class="text-end fw-bold text-primary h5 mb-0">${{ po.grand_total }}</td>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
             </div>
-            <div class="card-footer bg-transparent py-3">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <span class="text-muted small"><i class="ri-calendar-line me-1"></i> Submitted on: {{ po.created_at|date:"M d, Y H:i" }}</span>
-                    </div>
-                    {% if po.remarks %}
-                    <div class="col-md-6 text-md-end">
-                        <span class="text-muted small"><i class="ri-feedback-line me-1"></i> Admin Remarks: {{ po.remarks }}</span>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
         </div>
-        {% empty %}
-        <div class="text-center py-5">
-            <div class="mb-3">
-                <i class="ri-file-list-3-line ri-4x text-muted opacity-25"></i>
-            </div>
-            <h4 class="text-muted">No purchase orders found.</h4>
-            <p class="text-muted">When you submit items, they will appear here.</p>
-        </div>
-        {% endfor %}
     </div>
 </div>
+
+<script>
+    function toggleDetails(id, row) {
+        const detailRow = document.getElementById(id);
+        const btn = document.getElementById('btn-' + id);
+        const icon = btn.querySelector('i');
+
+        if (detailRow.classList.contains('show')) {
+            detailRow.classList.remove('show');
+            btn.classList.remove('active');
+            icon.className = 'ri-add-line';
+        } else {
+            detailRow.classList.add('show');
+            btn.classList.add('active');
+            icon.className = 'ri-subtract-line';
+        }
+    }
+</script>
 {% endblock %}
