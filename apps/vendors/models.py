@@ -18,7 +18,10 @@ class Vendor(models.Model):
 class PurchaseOrder(models.Model):
     STATUS_CHOICES = [
         ("Pending", "Pending"),
+        ("Submitted", "Submitted"),
         ("Received", "Received"),
+        ("Verified", "Verified"),
+        ("Rejected", "Rejected"),
     ]
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name="purchase_orders")
     po_number = models.CharField(max_length=50, unique=True)

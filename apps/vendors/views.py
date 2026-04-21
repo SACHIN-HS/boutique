@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
@@ -218,7 +219,7 @@ def portal_dashboard(request, token):
         po.grand_total = grand_total
         po.save()
         messages.success(request, f"Purchase Order {po_number} submitted successfully!")
-        return redirect('portal_history', token=token)
+        return redirect('portal_po_qr', token=token, po_number=po.po_number)
         
     return render(request, 'vendors/portal_dashboard.html', {
         'vendor': vendor,
@@ -234,8 +235,72 @@ def portal_history(request, token):
     pos = PurchaseOrder.objects.filter(vendor=vendor).prefetch_related('items').order_by('-created_at')
     return render(request, 'vendors/portal_history.html', {'vendor': vendor, 'pos': pos})
 
+def portal_po_qr(request, token, po_number):
+    # QR page should work with vendor theme using token in URL.
+    # If vendor is also logged in (session), that's fine; token is still the source of truth.
+    vendor = get_object_or_404(Vendor, portal_token=token, is_active=True)
+
+    po = get_object_or_404(PurchaseOrder, po_number=po_number, vendor=vendor)
+
+    host = request.get_host()
+    proto = "https" if request.is_secure() else "http"
+    qr_target_url = f"{proto}://{host}{reverse('portal_po_items', kwargs={'token': token, 'po_number': po.po_number})}"
+    qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={qr_target_url}"
+
+    return render(request, 'vendors/portal_po_qr.html', {
+        'vendor': vendor,
+        'po': po,
+        'qr_url': qr_url,
+        'qr_target_url': qr_target_url,
+    })
+
+def portal_po_items(request, token, po_number):
+    # Public page for QR scan (other device). Uses token + po_number, no session required.
+    vendor = get_object_or_404(Vendor, portal_token=token, is_active=True)
+    po = get_object_or_404(
+        PurchaseOrder.objects.prefetch_related('items'),
+        po_number=po_number,
+        vendor=vendor,
+    )
+
+    if request.method == 'POST':
+        allowed = {'Pending', 'Verified', 'Defective'}
+        items = list(po.items.all())
+        all_processed = True
+        any_verified = False
+        
+        for item in items:
+            new_status = (request.POST.get(f"status_{item.id}") or '').strip()
+            if new_status and new_status in allowed:
+                if item.status != new_status:
+                    item.status = new_status
+                    item.save(update_fields=['status'])
+                
+                if new_status == 'Pending':
+                    all_processed = False
+                else:
+                    any_verified = True
+            else:
+                all_processed = False
+
+        # Update overall PO status based on items
+        if all_processed:
+            po.status = "Verified"
+        elif any_verified:
+            po.status = "Received"
+        po.save(update_fields=['status'])
+        
+        messages.success(request, 'Item statuses updated and PO status reflected.')
+
+    return render(request, 'vendors/portal_po_items.html', {
+        'vendor': vendor,
+        'po': po,
+        'qr_scan': True,
+    })
+
 def portal_logout(request, token):
     if 'vendor_id' in request.session:
         del request.session['vendor_id']
     return redirect('portal_login', token=token)
+
 

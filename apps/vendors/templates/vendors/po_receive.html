@@ -48,6 +48,7 @@
                                 <label class="form-label fw-bold">Verification Status</label>
                                 <select name="status" class="form-select" required>
                                     <option value="Verified" {% if po.status == 'Verified' %}selected{% endif %}>Verified</option>
+                                    <option value="Received" {% if po.status == 'Received' %}selected{% endif %}>Received (Partial Verification)</option>
                                     <option value="Rejected" {% if po.status == 'Rejected' %}selected{% endif %}>Rejected</option>
                                     <option value="Submitted" {% if po.status == 'Submitted' %}selected{% endif %}>Submitted</option>
                                 </select>

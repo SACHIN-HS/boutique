@@ -65,5 +65,8 @@
 
 {% include 'includes/scripts.html' %}
 
+{# Child templates can inject page-specific JS here. #}
+{% block extra_js %}{% endblock %}
+
 </body>
 </html>
