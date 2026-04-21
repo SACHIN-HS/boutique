@@ -189,27 +189,41 @@
 
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="#">
+            {% comment %} <a class="navbar-brand" href="#">
                 <i class="ri-store-2-line me-2"></i> BOUTIQUE VENDOR PORTAL
-            </a>
+            </a> {% endcomment %}
+            <img src="{% static 'assets/images/logo.jpg' %}" height="60" width="70" alt="">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
-                    {% if vendor %}
-                        <li class="nav-item">
-                            <a class="nav-link fw-medium" href="{% url 'portal_dashboard' vendor.portal_token %}">New PO</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link fw-medium" href="{% url 'portal_history' vendor.portal_token %}">History</a>
-                        </li>
-                        <li class="nav-item ms-lg-3">
-                            <span class="text-muted me-3">Welcome, {{ vendor.name }}</span>
-                            <a class="btn btn-outline-danger btn-sm" href="{% url 'portal_logout' vendor.portal_token %}">
-                                <i class="ri-logout-box-r-line"></i> Logout
-                            </a>
-                        </li>
+                    {% if not qr_scan %}
+                        {% if vendor %}
+                            {% if request.session.vendor_id %}
+                                <li class="nav-item">
+                                    <a class="nav-link fw-medium" href="{% url 'portal_dashboard' vendor.portal_token %}">
+                                        <i class="ri-add-circle-line me-1"></i> New PO
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link fw-medium" href="{% url 'portal_history' vendor.portal_token %}">
+                                        <i class="ri-history-line me-1"></i> History
+                                    </a>
+                                </li>
+                                <li class="nav-item ms-lg-3">
+                                    <a class="btn btn-soft-danger btn-sm" href="{% url 'portal_logout' vendor.portal_token %}">
+                                        <i class="ri-logout-box-r-line"></i> Logout
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="nav-item">
+                                    <span class="nav-link fw-bold text-primary">
+                                        <i class="ri-user-smile-line me-1"></i> Welcome, {{ vendor.name }}
+                                    </span>
+                                </li>
+                            {% endif %}
+                        {% endif %}
                     {% endif %}
                 </ul>
             </div>

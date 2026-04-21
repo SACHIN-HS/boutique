@@ -67,6 +67,11 @@
         color: #991b1b;
     }
 
+    .badge-submitted {
+        background-color: #e0f2fe;
+        color: #075985;
+    }
+
     .table-detail {
         margin: 1rem 0;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -122,7 +127,15 @@
                                     {{ po.created_at|date:"M d, Y" }}
                                 </td>
                                 <td>
-                                    <span class="status-badge badge-{{ po.status|lower }}">{{ po.status }}</span>
+                                    {% if po.status == 'Verified' %}
+                                        <span class="status-badge badge-verified">Verified</span>
+                                    {% elif po.status == 'Received' %}
+                                        <span class="status-badge badge-received">Received</span>
+                                    {% elif po.status == 'Submitted' %}
+                                        <span class="status-badge badge-submitted">Submitted</span>
+                                    {% else %}
+                                        <span class="status-badge badge-pending">Pending</span>
+                                    {% endif %}
                                 </td>
                                 <td class="text-end fw-bold">
                                     ${{ po.grand_total }}
@@ -131,6 +144,12 @@
                             <tr class="detail-row" id="po-{{ po.id }}">
                                 <td colspan="6" class="p-4">
                                     <div class="table-detail">
+                                        <div class="p-2 bg-light d-flex justify-content-between align-items-center px-3 border-bottom">
+                                            <span class="fw-bold small text-muted">Order Items</span>
+                                            <a href="{% url 'portal_po_qr' vendor.portal_token po.po_number %}" class="btn btn-sm btn-dark">
+                                                <i class="ri-qr-code-line me-1"></i> View QR & Print
+                                            </a>
+                                        </div>
                                         <table class="table table-sm mb-0">
                                             <thead class="table-light">
                                                 <tr>
@@ -153,8 +172,13 @@
                                                     <td class="text-end">${{ item.unit_price }}</td>
                                                     <td class="text-end fw-bold">${{ item.total_value }}</td>
                                                     <td class="text-center">
-                                                        <span class="status-badge badge-{{ item.status|lower }}">{{
-                                                            item.status }}</span>
+                                                        {% if item.status == 'Verified' %}
+                                                            <span class="status-badge badge-verified">Verified</span>
+                                                        {% elif item.status == 'Defective' %}
+                                                            <span class="status-badge badge-defective">Defective</span>
+                                                        {% else %}
+                                                            <span class="status-badge badge-pending">Pending</span>
+                                                        {% endif %}
                                                     </td>
                                                 </tr>
                                                 {% endfor %}
