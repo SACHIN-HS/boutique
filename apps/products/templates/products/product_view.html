@@ -51,8 +51,8 @@
                                 <td>{{ p.colors|default:"-" }}</td>
                                 <td>
                                     <a href="{% url 'product_edit' p.pk %}" class="btn btn-soft-warning btn-sm">Edit</a>
-                                    <a href="{% url 'product_delete' p.pk %}" class="btn btn-soft-danger btn-sm"
-                                        onclick="return confirm('Delete {{ p.name }}?')">Delete</a>
+                                    <button class="btn btn-soft-danger btn-sm"
+                                        onclick="confirmDelete('{% url 'product_delete' p.pk %}', '{{ p.name }}')">Delete</button>
                                 </td>
                             </tr>
                             {% empty %}
