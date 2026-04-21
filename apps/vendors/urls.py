@@ -15,4 +15,6 @@ urlpatterns = [
     path('portal/dashboard/<str:token>/', views.portal_dashboard, name='portal_dashboard'),
     path('portal/history/<str:token>/', views.portal_history, name='portal_history'),
     path('portal/logout/<str:token>/', views.portal_logout, name='portal_logout'),
+    path('portal/po/qr/<str:token>/<str:po_number>/', views.portal_po_qr, name='portal_po_qr'),
+    path('portal/po/items/<str:token>/<str:po_number>/', views.portal_po_items, name='portal_po_items'),
 ]

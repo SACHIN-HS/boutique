@@ -17,14 +17,15 @@ class Vendor(models.Model):
 
 class PurchaseOrder(models.Model):
     STATUS_CHOICES = [
-        ("Draft", "Draft"),
+        ("Pending", "Pending"),
         ("Submitted", "Submitted"),
+        ("Received", "Received"),
         ("Verified", "Verified"),
         ("Rejected", "Rejected"),
     ]
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name="purchase_orders")
     po_number = models.CharField(max_length=50, unique=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Draft")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
     grand_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     remarks = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -34,6 +35,11 @@ class PurchaseOrder(models.Model):
 
 
 class PurchaseOrderItem(models.Model):
+    ITEM_STATUS_CHOICES = [
+        ("Pending", "Pending"),
+        ("Verified", "Verified"),
+        ("Defective", "Defective"),
+    ]
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name="items")
     item_name = models.CharField(max_length=200)
     category = models.CharField(max_length=100, blank=True)
@@ -42,6 +48,7 @@ class PurchaseOrderItem(models.Model):
     qty = models.PositiveIntegerField(default=0)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=ITEM_STATUS_CHOICES, default="Pending")
     
     # Legacy fields for inventory/dashboard tracking
     received = models.BooleanField(default=False)

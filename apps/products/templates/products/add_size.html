@@ -1,0 +1,71 @@
+{% extends 'dashboard/base.html' %}
+{% block page_title %}Add Size{% endblock %}
+{% block breadcrumb %}Add Size{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header"><h5 class="card-title mb-0">{% if edit_size %}Edit Size{% else %}Add Size{% endif %}</h5></div>
+                    <div class="card-body">
+                        <form method="post" action="{% if edit_size %}{% url 'edit_size' edit_size.id %}{% else %}{% url 'add_size' %}{% endif %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Size Name</label>
+                                <input type="text" name="name" class="form-control" placeholder="Enter size name (e.g. XXL)" value="{% if edit_size %}{{ edit_size.name }}{% endif %}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Code</label>
+                                <input type="text" name="code" class="form-control" placeholder="e.g. XXL" value="{% if edit_size %}{{ edit_size.code }}{% endif %}">
+                            </div>
+                            <button type="submit" class="btn btn-primary">{% if edit_size %}Update Size{% else %}Save Size{% endif %}</button>
+                            {% if edit_size %}
+                            <a href="{% url 'add_size' %}" class="btn btn-light">Cancel</a>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header"><h5 class="card-title mb-0">Size List</h5></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Size Name</th>
+                                        <th>Code</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for size in sizes %}
+                                    <tr>
+                                        <td>{{ size.name }}</td>
+                                        <td>{{ size.code|default:"-" }}</td>
+                                        <td class="text-end">
+                                            <a href="{% url 'edit_size' size.id %}" class="btn btn-sm btn-soft-primary">Edit</a>
+                                            <form method="post" action="{% url 'delete_size' size.id %}" class="d-inline" onsubmit="return confirm('Delete this size?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-soft-danger">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">No sizes found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>{% block title %}Vendor Portal{% endblock %} | Boutique Admin</title>
+    <title>{% block title %}Vendor Login{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
     
@@ -12,70 +12,167 @@
     <!-- Icons Css -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" type="text/css" />
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --po-bg: #e0ddd8;
+            --po-surface: #fffaef;
+            --po-surface-soft: #faf8f5;
+            --po-muted: #6b6560;
+            --po-text: #1c1917;
+            --po-brown: #6e3420;
+            --po-brown-hover: #5c4433;
+            --po-beige: #f5f0e8;
+            --po-border: rgba(74, 55, 40, 0.12);
+            --po-shadow: 0 4px 24px rgba(28, 25, 23, 0.08);
+            --po-radius: 16px;
+            --po-radius-sm: 10px;
+            --font-po: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            font-family: var(--font-po);
+            background: var(--po-bg);
+            color: var(--po-text);
+            -webkit-font-smoothing: antialiased;
         }
+
         .navbar {
-            background: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            padding: 1rem 0;
+            background: var(--po-surface);
+            border-bottom: 1px solid var(--po-border);
+            box-shadow: var(--po-shadow);
+            padding: 0.9rem 0;
         }
+
         .navbar-brand {
             font-weight: 700;
-            color: #4b38b3;
+            color: var(--po-brown);
+            letter-spacing: 0.02em;
         }
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            margin-bottom: 2rem;
-        }
-        .btn-primary {
-            background-color: #4b38b3;
-            border-color: #4b38b3;
-            padding: 0.6rem 1.5rem;
-            font-weight: 500;
-            border-radius: 8px;
-        }
-        .btn-outline-primary {
-            color: #4b38b3;
-            border-color: #4b38b3;
-            border-radius: 8px;
-        }
-        .btn-primary:hover {
-            background-color: #3f2e96;
-            border-color: #3f2e96;
-        }
-        .portal-header {
-            background: linear-gradient(135deg, #4b38b3 0%, #6e5edb 100%);
-            color: white;
-            padding: 3rem 0;
-            margin-bottom: -2rem;
-        }
-        .table thead th {
-            background-color: #f8f9fa;
+
+        .navbar .nav-link {
+            color: var(--po-brown);
             font-weight: 600;
-            color: #666;
+        }
+
+        .navbar .nav-link:hover {
+            color: var(--po-brown-hover);
+        }
+
+        .card {
+            border: 1px solid var(--po-border);
+            border-radius: var(--po-radius);
+            box-shadow: var(--po-shadow);
+            margin-bottom: 2rem;
+            background: var(--po-surface);
+        }
+
+        .card-header,
+        .card-footer {
+            border-color: var(--po-border) !important;
+        }
+
+        .btn-primary {
+            background-color: var(--po-brown);
+            border-color: var(--po-brown);
+            padding: 0.6rem 1.5rem;
+            font-weight: 600;
+            border-radius: var(--po-radius-sm);
+        }
+
+        .btn-outline-primary {
+            color: var(--po-brown);
+            border-color: rgba(74, 55, 40, 0.25);
+            border-radius: var(--po-radius-sm);
+            background: #fff;
+        }
+
+        .btn-outline-primary:hover {
+            color: #fff;
+            background: var(--po-brown);
+            border-color: var(--po-brown);
+        }
+
+        .btn-outline-danger {
+            border-radius: var(--po-radius-sm);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--po-brown-hover);
+            border-color: var(--po-brown-hover);
+        }
+
+        .table thead th {
+            background-color: var(--po-surface-soft);
+            font-weight: 700;
+            color: var(--po-muted);
             text-transform: uppercase;
             font-size: 0.75rem;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #eee;
+            letter-spacing: 0.08em;
+            border-bottom: 1px solid var(--po-border);
         }
+
+        .table > :not(caption) > * > * {
+            border-bottom-color: rgba(74, 55, 40, 0.08);
+        }
+
+        .form-control,
+        .input-group-text,
+        textarea {
+            border-radius: var(--po-radius-sm) !important;
+            border-color: rgba(74, 55, 40, 0.18) !important;
+        }
+
+        .form-control:focus,
+        textarea:focus {
+            border-color: var(--po-brown) !important;
+            box-shadow: 0 0 0 3px rgba(74, 55, 40, 0.12) !important;
+        }
+
+        .text-primary {
+            color: var(--po-brown) !important;
+        }
+
+        .text-muted {
+            color: var(--po-muted) !important;
+        }
+
+        .btn-soft-primary {
+            color: var(--po-brown);
+            background: var(--po-beige);
+            border: 1px solid rgba(74, 55, 40, 0.15);
+            border-radius: var(--po-radius-sm);
+            font-weight: 600;
+        }
+
+        .btn-soft-primary:hover {
+            background: #efe8dc;
+            color: var(--po-brown-hover);
+        }
+
+        .btn-soft-danger {
+            color: #9f1239;
+            background: #fef2f2;
+            border: 1px solid #fecdd3;
+            border-radius: 8px;
+        }
+
+        .btn-soft-danger:hover {
+            background: #ffe4e6;
+            color: #881337;
+        }
+
         .status-badge {
             padding: 0.4rem 0.8rem;
             border-radius: 50px;
             font-size: 0.8rem;
             font-weight: 600;
         }
-        .badge-draft { background: #e9ecef; color: #495057; }
+        .badge-draft { background: #ede7dd; color: #5f5244; }
         .badge-submitted { background: #fff3cd; color: #856404; }
-        .badge-verified { background: #d4edda; color: #155724; }
-        .badge-rejected { background: #f8d7da; color: #721c24; }
+        .badge-verified { background: #d1fae5; color: #065f46; }
+        .badge-rejected { background: #fee2e2; color: #991b1b; }
 
         /* Animation */
         .fade-in {
@@ -92,27 +189,41 @@
 
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="#">
+            {% comment %} <a class="navbar-brand" href="#">
                 <i class="ri-store-2-line me-2"></i> BOUTIQUE VENDOR PORTAL
-            </a>
+            </a> {% endcomment %}
+            <img src="{% static 'assets/images/logo.jpg' %}" height="60" width="70" alt="">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
-                    {% if vendor %}
-                        <li class="nav-item">
-                            <a class="nav-link fw-medium" href="{% url 'portal_dashboard' vendor.portal_token %}">New PO</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link fw-medium" href="{% url 'portal_history' vendor.portal_token %}">History</a>
-                        </li>
-                        <li class="nav-item ms-lg-3">
-                            <span class="text-muted me-3">Welcome, {{ vendor.name }}</span>
-                            <a class="btn btn-outline-danger btn-sm" href="{% url 'portal_logout' vendor.portal_token %}">
-                                <i class="ri-logout-box-r-line"></i> Logout
-                            </a>
-                        </li>
+                    {% if not qr_scan %}
+                        {% if vendor %}
+                            {% if request.session.vendor_id %}
+                                <li class="nav-item">
+                                    <a class="nav-link fw-medium" href="{% url 'portal_dashboard' vendor.portal_token %}">
+                                        <i class="ri-add-circle-line me-1"></i> New PO
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link fw-medium" href="{% url 'portal_history' vendor.portal_token %}">
+                                        <i class="ri-history-line me-1"></i> History
+                                    </a>
+                                </li>
+                                <li class="nav-item ms-lg-3">
+                                    <a class="btn btn-soft-danger btn-sm" href="{% url 'portal_logout' vendor.portal_token %}">
+                                        <i class="ri-logout-box-r-line"></i> Logout
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="nav-item">
+                                    <span class="nav-link fw-bold text-primary">
+                                        <i class="ri-user-smile-line me-1"></i> Welcome, {{ vendor.name }}
+                                    </span>
+                                </li>
+                            {% endif %}
+                        {% endif %}
                     {% endif %}
                 </ul>
             </div>
@@ -132,7 +243,7 @@
         {% block content %}{% endblock %}
     </div>
 
-    <footer class="text-center py-4 text-muted border-top mt-5">
+    <footer class="text-center py-4 text-muted border-top mt-5" style="border-color: var(--po-border) !important;">
         <p>&copy; 2026 Boutique Management System. All rights reserved.</p>
     </footer>
 

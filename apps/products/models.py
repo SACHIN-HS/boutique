@@ -1,15 +1,33 @@
 from django.db import models
 
 
+class VariantCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class VariantSize(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    code = models.CharField(max_length=20, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
-    CATEGORY_CHOICES = [
-        ("Men", "Men"),
-        ("Women", "Women"),
-        ("Kids", "Kids"),
-        ("Jewelry", "Jewelry"),
-    ]
     name = models.CharField(max_length=200)
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    category = models.CharField(max_length=100)
     sku = models.CharField(max_length=100, unique=True)
     description = models.TextField()
     qty = models.PositiveIntegerField(default=0)

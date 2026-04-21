@@ -2,6 +2,14 @@
 {% block page_title %}Purchase Orders{% endblock %}
 {% block breadcrumb %}PO Orders{% endblock %}
 
+{% block extra_css %}
+<style>
+    .order-row.is-selected {
+        background-color: rgba(64, 81, 137, 0.08);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row g-3 mb-3">
     <div class="col-md-4">
@@ -16,7 +24,7 @@
         <div class="card card-animate">
             <div class="card-body">
                 <p class="text-uppercase fw-medium text-muted mb-1">Total Value</p>
-                <h4 class="fs-22 fw-semibold">${{ total_value }}</h4>
+                <h4 class="fs-22 fw-semibold">${{ total_value|floatformat:2 }}</h4>
             </div>
         </div>
     </div>
@@ -27,8 +35,10 @@
         <h5 class="card-title mb-0">Purchase Orders</h5>
         <div class="d-flex gap-2 align-items-center flex-wrap">
             <form method="get" class="d-flex gap-2 align-items-center">
-                <input type="date" name="from" class="form-control form-control-sm" value="{{ date_from }}" placeholder="From">
-                <input type="date" name="to" class="form-control form-control-sm" value="{{ date_to }}" placeholder="To">
+                <input type="date" name="from" class="form-control form-control-sm" value="{{ date_from }}"
+                    placeholder="From">
+                <input type="date" name="to" class="form-control form-control-sm" value="{{ date_to }}"
+                    placeholder="To">
                 <button type="submit" class="btn btn-soft-primary btn-sm">Filter</button>
                 <a href="{% url 'po_list' %}" class="btn btn-light btn-sm">Clear</a>
             </form>
@@ -37,7 +47,7 @@
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-hover table-centered align-middle table-nowrap mb-0">
-                <thead class="text-muted">
+                <thead class="text-muted bg-light-subtle">
                     <tr>
                         <th>PO Number</th>
                         <th>Vendor</th>
@@ -45,36 +55,203 @@
                         <th>Status</th>
                         <th>Total</th>
                         <th>Created</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for po in pos %}
-                    <tr>
-                        <td class="fw-semibold">{{ po.po_number }}</td>
+                    <tr class="order-row {% if selected_po and selected_po.id == po.id %}is-selected{% endif %}" id="po-row-{{ po.id }}">
+                        <td class="fw-semibold">
+                            <a href="#" class="po-link" data-po-id="{{ po.id }}">
+                                {{ po.po_number }}
+                            </a>
+                        </td>
                         <td>{{ po.vendor.name }}</td>
                         <td>{{ po.items.count }}</td>
                         <td>
                             {% if po.status == 'Verified' %}
-                            <span class="badge bg-success-subtle text-success">Verified</span>
-                            {% elif po.status == 'Partial' %}
-                            <span class="badge bg-warning-subtle text-warning">Partial</span>
+                            <span class="badge bg-success text-white">Verified</span>
+                            {% elif po.status == 'Received' %}
+                            <span class="badge bg-success-subtle text-success">Received</span>
+                            {% elif po.status == 'Submitted' %}
+                            <span class="badge bg-info-subtle text-info">Submitted</span>
+                            {% elif po.status == 'Pending' %}
+                            <span class="badge bg-warning-subtle text-warning">Pending</span>
                             {% else %}
-                            <span class="badge bg-danger-subtle text-danger">Pending</span>
+                            <span class="badge bg-secondary-subtle text-secondary">{{ po.status }}</span>
                             {% endif %}
                         </td>
                         <td>${{ po.grand_total }}</td>
                         <td>{{ po.created_at|date:"d M Y" }}</td>
-                        <td>
-                            <a href="{% url 'po_receive' po.pk %}" class="btn btn-soft-info btn-sm">Receive</a>
-                        </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="7" class="text-center text-muted py-4">No purchase orders found.</td></tr>
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No purchase orders found.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<!-- PO Items Modal -->
+<div class="modal zoomIn" id="poItemsModal" tabindex="-1" aria-labelledby="poItemsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+             <!--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+             <div class="modal-header">
+                <div class="d-flex flex-column">
+                    <h5 class="modal-title" id="poItemsModalLabel">PO Items Details</h5>
+                    <div class="text-muted small" id="poItemsModalSubtitle">Select a PO to view items.</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div> -->
+            <div class="modal-body" id="poItemsModalBody">
+                <div class="text-muted">Select a PO to view items.</div>
+            </div> 
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Hidden templates for the bottom details panel #}
+<div class="d-none" aria-hidden="true">
+    {% for po in pos %}
+    <div id="po-items-template-{{ po.id }}">
+        <div class="p-3 bg-light-subtle rounded-3 mb-4 d-flex justify-content-between align-items-center">
+            <div class="d-flex flex-column gap-1">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-18 fw-bold text-primary">{{ po.po_number }}</span>
+                    {% if po.status == 'Verified' %}
+                        <span class="badge bg-success text-white">Verified</span>
+                    {% elif po.status == 'Received' %}
+                        <span class="badge bg-success-subtle text-success">Received</span>
+                    {% elif po.status == 'Submitted' %}
+                        <span class="badge bg-info-subtle text-info">Submitted</span>
+                    {% elif po.status == 'Pending' %}
+                        <span class="badge bg-warning-subtle text-warning">Pending</span>
+                    {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary">{{ po.status }}</span>
+                    {% endif %}
+                </div>
+                <div class="text-muted">
+                    <i class="ri-user-line me-1"></i> Vendor: <span class="fw-medium text-dark">{{ po.vendor.name }}</span>
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="text-muted small text-uppercase fw-semibold mb-1">Total Amount</div>
+                <div class="fs-24 fw-bold text-success">${{ po.grand_total }}</div>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="text-muted bg-light-subtle">
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Color</th>
+                        <th>Size</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Total Value</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in po.items.all %}
+                    <tr>
+                        <td class="fw-semibold">{{ item.item_name }}</td>
+                        <td>{{ item.category }}</td>
+                        <td>{{ item.color }}</td>
+                        <td>{{ item.size }}</td>
+                        <td>{{ item.qty }}</td>
+                        <td>${{ item.unit_price }}</td>
+                        <td>${{ item.total_value }}</td>
+                        <td>
+                            {% if item.status == 'Verified' %}
+                            <span class="badge bg-success-subtle text-success">Verified</span>
+                            {% elif item.status == 'Defective' %}
+                            <span class="badge bg-danger-subtle text-danger">Defective</span>
+                            {% else %}
+                            <span class="badge bg-warning-subtle text-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-3">No items in this PO.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        function clearSelection() {
+            var selected = document.querySelectorAll('.order-row.is-selected');
+            for (var i = 0; i < selected.length; i++) {
+                selected[i].classList.remove('is-selected');
+            }
+        }
+
+        function onReady(fn) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', fn);
+            } else {
+                fn();
+            }
+        }
+
+        onReady(function () {
+            var links = document.querySelectorAll('.po-link');
+            var modalEl = document.getElementById('poItemsModal');
+            var modalTitle = document.getElementById('poItemsModalLabel');
+            var modalSubtitle = document.getElementById('poItemsModalSubtitle');
+            var modalBody = document.getElementById('poItemsModalBody');
+            var modal = null;
+
+            if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+            }
+
+            for (var i = 0; i < links.length; i++) {
+                (function (link) {
+                    link.addEventListener('click', function (e) {
+                        if (e && e.preventDefault) e.preventDefault();
+
+                        var poId = link.getAttribute('data-po-id');
+                        var template = document.getElementById('po-items-template-' + poId);
+                        var row = document.getElementById('po-row-' + poId);
+
+                        if (!template || !modalBody) return;
+
+                        clearSelection();
+                        if (row) row.classList.add('is-selected');
+
+                        if (modalTitle) modalTitle.textContent = 'PO Items Details';
+                        if (modalSubtitle) modalSubtitle.textContent = 'Showing items for PO #' + (link.textContent || '').replace(/^\s+|\s+$/g, '');
+                        modalBody.innerHTML = template.innerHTML;
+
+                        if (modal) {
+                            modal.show();
+                        } else if (modalEl) {
+                            modalEl.classList.add('show');
+                            modalEl.style.display = 'block';
+                        }
+                    });
+                })(links[i]);
+            }
+        });
+    })();
+</script>
 {% endblock %}

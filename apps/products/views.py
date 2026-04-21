@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.utils.text import slugify
 import datetime
 
-from .models import Product
+from .models import Product, VariantCategory, VariantSize
 from apps.vendors.models import PurchaseOrder, PurchaseOrderItem
 
 
@@ -36,7 +36,8 @@ def product_add(request):
             return redirect('product_view')
         messages.error(request, 'Please fill required fields.')
     return render(request, 'products/product_add.html', {
-        'sizes': ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free"],
+        'categories': VariantCategory.objects.values_list('name', flat=True),
+        'sizes': VariantSize.objects.values_list('name', flat=True),
         'colors': ["Red", "Blue", "Yellow", "Green", "Black", "White", "Pink", "Purple"],
     })
 
@@ -64,7 +65,8 @@ def product_edit(request, pk):
         return redirect('product_view')
     return render(request, 'products/product_edit.html', {
         'product': product,
-        'sizes': ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free"],
+        'categories': VariantCategory.objects.values_list('name', flat=True),
+        'sizes': VariantSize.objects.values_list('name', flat=True),
         'colors': ["Red", "Blue", "Yellow", "Green", "Black", "White", "Pink", "Purple"],
     })
 
@@ -116,4 +118,122 @@ def sku_mark_printed(request, item_pk):
 
 @login_required(login_url='login')
 def add_category(request):
-    return render(request, 'products/add_category.html')
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if not name:
+            messages.error(request, 'Category name is required.')
+            return redirect('add_category')
+
+        slug_value = request.POST.get('slug', '').strip() or slugify(name)
+        if VariantCategory.objects.filter(name__iexact=name).exists():
+            messages.warning(request, f'Category "{name}" already exists.')
+        else:
+            VariantCategory.objects.create(name=name, slug=slug_value)
+            messages.success(request, f'Category "{name}" saved successfully.')
+        return redirect('add_category')
+
+    return render(request, 'products/add_category.html', {
+        'categories': VariantCategory.objects.all(),
+    })
+
+
+@login_required(login_url='login')
+def edit_category(request, pk):
+    category = get_object_or_404(VariantCategory, pk=pk)
+    if request.method == 'GET':
+        return render(request, 'products/add_category.html', {
+            'categories': VariantCategory.objects.all(),
+            'edit_category': category,
+        })
+    if request.method != 'POST':
+        return redirect('add_category')
+
+    name = request.POST.get('name', '').strip()
+    if not name:
+        messages.error(request, 'Category name is required.')
+        return redirect('add_category')
+
+    slug_value = request.POST.get('slug', '').strip() or slugify(name)
+
+    if VariantCategory.objects.filter(name__iexact=name).exclude(pk=category.pk).exists():
+        messages.warning(request, f'Category "{name}" already exists.')
+        return redirect('add_category')
+
+    if VariantCategory.objects.filter(slug=slug_value).exclude(pk=category.pk).exists():
+        messages.warning(request, f'Slug "{slug_value}" is already used.')
+        return redirect('add_category')
+
+    category.name = name
+    category.slug = slug_value
+    category.save()
+    messages.success(request, f'Category "{name}" updated successfully.')
+    return redirect('add_category')
+
+
+@login_required(login_url='login')
+def delete_category(request, pk):
+    category = get_object_or_404(VariantCategory, pk=pk)
+    if request.method == 'POST':
+        category_name = category.name
+        category.delete()
+        messages.success(request, f'Category "{category_name}" deleted successfully.')
+    return redirect('add_category')
+
+
+@login_required(login_url='login')
+def add_size(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if not name:
+            messages.error(request, 'Size name is required.')
+            return redirect('add_size')
+
+        code = request.POST.get('code', '').strip()
+        if VariantSize.objects.filter(name__iexact=name).exists():
+            messages.warning(request, f'Size "{name}" already exists.')
+        else:
+            VariantSize.objects.create(name=name, code=code)
+            messages.success(request, f'Size "{name}" saved successfully.')
+        return redirect('add_size')
+
+    return render(request, 'products/add_size.html', {
+        'sizes': VariantSize.objects.all(),
+    })
+
+
+@login_required(login_url='login')
+def edit_size(request, pk):
+    size = get_object_or_404(VariantSize, pk=pk)
+    if request.method == 'GET':
+        return render(request, 'products/add_size.html', {
+            'sizes': VariantSize.objects.all(),
+            'edit_size': size,
+        })
+    if request.method != 'POST':
+        return redirect('add_size')
+
+    name = request.POST.get('name', '').strip()
+    if not name:
+        messages.error(request, 'Size name is required.')
+        return redirect('add_size')
+
+    code = request.POST.get('code', '').strip()
+    if VariantSize.objects.filter(name__iexact=name).exclude(pk=size.pk).exists():
+        messages.warning(request, f'Size "{name}" already exists.')
+        return redirect('add_size')
+
+    size.name = name
+    size.code = code
+    size.save()
+    messages.success(request, f'Size "{name}" updated successfully.')
+    return redirect('add_size')
+
+
+@login_required(login_url='login')
+def delete_size(request, pk):
+    size = get_object_or_404(VariantSize, pk=pk)
+    if request.method == 'POST':
+        size_name = size.name
+        size.delete()
+        messages.success(request, f'Size "{size_name}" deleted successfully.')
+    return redirect('add_size')

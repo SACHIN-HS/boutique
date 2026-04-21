@@ -18,12 +18,12 @@
     </div> {% endcomment %}
     <div class="navbar-brand-box">
         <a href="{% url 'dashboard' %}" class="logo logo-dark">
-            <span class="logo-sm"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="50"></span>
-            <span class="logo-lg"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="50"></span>
+            <span class="logo-sm"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="70" ></span>
+            <span class="logo-lg"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="70" ></span>
         </a>
         <a href="{% url 'dashboard' %}" class="logo logo-light">
-            <span class="logo-sm"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="50"></span>
-            <span class="logo-lg"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="50"></span>
+            <span class="logo-sm"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="70"></span>
+            <span class="logo-lg"><img src="{% static 'assets/images/logo.jpg' %}" alt="" height="70"></span>
         </a>
         <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
             <i class="ri-record-circle-line"></i>
@@ -101,6 +101,22 @@
                     </div>
                 </li>
 
+                <!-- Variant -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link {% if request.resolver_match.url_name == 'add_size' or request.resolver_match.url_name == 'add_category' %}active{% endif %}"
+                        href="#sidebarVariant" data-bs-toggle="collapse" role="button"
+                        aria-expanded="{% if request.resolver_match.url_name == 'add_size' or request.resolver_match.url_name == 'add_category' %}true{% else %}false{% endif %}"
+                        aria-controls="sidebarVariant">
+                        <i class="ri-list-settings-line"></i> <span>Variant</span>
+                    </a>
+                    <div class="collapse menu-dropdown {% if request.resolver_match.url_name == 'add_size' or request.resolver_match.url_name == 'add_category' %}show{% endif %}" id="sidebarVariant">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item"><a href="{% url 'add_size' %}" class="nav-link {% if request.resolver_match.url_name == 'add_size' %}active{% endif %}">Size</a></li>
+                            <li class="nav-item"><a href="{% url 'add_category' %}" class="nav-link {% if request.resolver_match.url_name == 'add_category' %}active{% endif %}">Category</a></li>
+                        </ul>
+                    </div>
+                </li>
+
                 <!-- SKU -->
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.url_name == 'sku_center' %}active{% endif %}" href="{% url 'sku_center' %}">
@@ -117,17 +133,9 @@
 
                 <!-- PO Order -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link {% if 'po' in request.resolver_match.url_name %}active{% endif %}"
-                        href="#sidebarPO" data-bs-toggle="collapse" role="button"
-                        aria-expanded="{% if 'po' in request.resolver_match.url_name %}true{% else %}false{% endif %}"
-                        aria-controls="sidebarPO">
+                    <a class="nav-link menu-link {% if request.resolver_match.url_name == 'po_list' %}active{% endif %}" href="{% url 'po_list' %}">
                         <i class="ri-file-list-3-line"></i> <span>PO Order</span>
                     </a>
-                    <div class="collapse menu-dropdown {% if 'po' in request.resolver_match.url_name %}show{% endif %}" id="sidebarPO">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item"><a href="{% url 'po_list' %}" class="nav-link {% if request.resolver_match.url_name == 'po_list' %}active{% endif %}">View POs</a></li>
-                        </ul>
-                    </div>
                 </li>
 
                 <!-- Orders -->

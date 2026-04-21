@@ -18,8 +18,8 @@
                         <div class="col-md-6">
                             <label class="form-label">Category <span class="text-danger">*</span></label>
                             <select name="category" class="form-select" required>
-                                {% for val, label in product.CATEGORY_CHOICES %}
-                                <option value="{{ val }}" {% if product.category == val %}selected{% endif %}>{{ label }}</option>
+                                {% for category in categories %}
+                                <option value="{{ category }}" {% if product.category == category %}selected{% endif %}>{{ category }}</option>
                                 {% endfor %}
                             </select>
                         </div>
