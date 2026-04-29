@@ -23,10 +23,12 @@
                         <table class="table table-bordered align-middle" id="items-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 25%;">Item Name <span class="text-danger">*</span></th>
-                                    <th>Category</th>
-                                    <th>Color</th>
-                                    <th>Size</th>
+                                    <th style="width: 18%;">Item Code <span class="text-danger">*</span></th>
+                                    <th style="width: 10%;">Category</th>
+                                    <th style="width: 10%;">Style</th>
+                                    <th style="width: 10%;">Gender</th>
+                                    <th style="width: 10%;">Color</th>
+                                    <th style="width: 10%;">Size</th>
                                     <th style="width: 10%;">Qty <span class="text-danger">*</span></th>
                                     <th style="width: 12%;">Price <span class="text-danger">*</span></th>
                                     <th style="width: 12%;">Total Value</th>
@@ -35,12 +37,28 @@
                             </thead>
                             <tbody id="items-body">
                                 <tr>
-                                    <td><input type="text" name="item_name" class="form-control" placeholder="Item name" required></td>
+                                    <td><input type="text" name="item_code" class="form-control" placeholder="Item code" required></td>
                                     <td>
                                         <select name="item_category" class="form-select">
                                             <option value="">Select</option>
                                             {% for category in categories %}
                                             <option value="{{ category }}">{{ category }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="item_style" class="form-select">
+                                            <option value="">Select</option>
+                                            {% for style in styles %}
+                                            <option value="{{ style.id }}">{{ style.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="item_gender" class="form-select">
+                                            <option value="">Select</option>
+                                            {% for gender in genders %}
+                                            <option value="{{ gender.id }}">{{ gender.name }}</option>
                                             {% endfor %}
                                         </select>
                                     </td>

@@ -28,9 +28,9 @@
                     <h6 class="mb-3">Items</h6>
                     <div id="itemsContainer">
                         <div class="row g-2 mb-2 item-row align-items-end">
-                            <div class="col-md-3">
-                                <label class="form-label">Item Name</label>
-                                <input type="text" name="item_name" class="form-control" placeholder="Item name" required>
+                            <div class="col-md-2">
+                                <label class="form-label">Item Code</label>
+                                <input type="text" name="item_code" class="form-control" placeholder="Item code" required>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Category</label>
@@ -38,6 +38,24 @@
                                     <option value="">Select</option>
                                     {% for category in categories %}
                                     <option value="{{ category }}">{{ category }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Style</label>
+                                <select name="item_style" class="form-select">
+                                    <option value="">Select</option>
+                                    {% for style in styles %}
+                                    <option value="{{ style.id }}">{{ style.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Gender</label>
+                                <select name="item_gender" class="form-select">
+                                    <option value="">Select</option>
+                                    {% for gender in genders %}
+                                    <option value="{{ gender.id }}">{{ gender.name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>

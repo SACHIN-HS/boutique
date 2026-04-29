@@ -65,7 +65,7 @@
                                 {{ po.po_number }}
                             </a>
                         </td>
-                        <td>{{ po.vendor.name }}</td>
+                        <td>{{ po.vendor.name|truncatechars:5 }}</td>
                         <td>{{ po.items.count }}</td>
                         <td>
                             {% if po.status == 'Verified' %}
@@ -151,8 +151,10 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="text-muted bg-light-subtle">
                     <tr>
-                        <th>Item Name</th>
+                        <th>Item Code</th>
                         <th>Category</th>
+                        <th>Style</th>
+                        <th>Gender</th>
                         <th>Color</th>
                         <th>Size</th>
                         <th>Qty</th>
@@ -164,8 +166,10 @@
                 <tbody>
                     {% for item in po.items.all %}
                     <tr>
-                        <td class="fw-semibold">{{ item.item_name }}</td>
+                        <td>{{ item.item_code|default:"-" }}</td>
                         <td>{{ item.category }}</td>
+                        <td>{{ item.variant_style.name|default:"-" }}</td>
+                        <td>{{ item.variant_gender.name|default:"-" }}</td>
                         <td>{{ item.color }}</td>
                         <td>{{ item.size }}</td>
                         <td>{{ item.qty }}</td>
@@ -183,7 +187,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-3">No items in this PO.</td>
+                        <td colspan="9" class="text-center text-muted py-3">No items in this PO.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

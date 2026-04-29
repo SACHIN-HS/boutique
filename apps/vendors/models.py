@@ -9,6 +9,12 @@ class Vendor(models.Model):
     address = models.TextField()
     is_active = models.BooleanField(default=True)
     phone = models.CharField(max_length=20, blank=True)
+    gender = models.CharField(
+        max_length=10,
+        choices=[("Men", "Men"), ("Women", "Women"), ("Kids", "Kids")],
+        blank=True,
+        default="",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -25,6 +31,13 @@ class PurchaseOrder(models.Model):
     ]
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name="purchase_orders")
     po_number = models.CharField(max_length=50, unique=True)
+    variant_style = models.ForeignKey(
+        "products.VariantStyle",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="purchase_orders",
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
     grand_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     remarks = models.TextField(blank=True, null=True)
@@ -41,8 +54,25 @@ class PurchaseOrderItem(models.Model):
         ("Defective", "Defective"),
     ]
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name="items")
-    item_name = models.CharField(max_length=200)
+    item_code = models.CharField(max_length=100, blank=True)
+    po_sku = models.CharField(max_length=64, blank=True)
+    reseller_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    reseller_sku = models.CharField(max_length=64, blank=True)
     category = models.CharField(max_length=100, blank=True)
+    variant_style = models.ForeignKey(
+        "products.VariantStyle",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="purchase_order_items",
+    )
+    variant_gender = models.ForeignKey(
+        "products.VariantGender",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="purchase_order_items",
+    )
     color = models.CharField(max_length=50, blank=True)
     size = models.CharField(max_length=50, blank=True)
     qty = models.PositiveIntegerField(default=0)
@@ -56,10 +86,11 @@ class PurchaseOrderItem(models.Model):
 
     @property
     def name(self):
-        return self.item_name
+        return self.item_code or self.category or "Item"
 
     def __str__(self):
-        return f"{self.item_name} ({self.color}/{self.size})"
+        base = self.item_code or self.category or "Item"
+        return f"{base} ({self.color}/{self.size})"
 
 
 class PurchaseOrderVerification(models.Model):

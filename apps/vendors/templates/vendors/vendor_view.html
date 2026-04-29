@@ -46,8 +46,10 @@
                                 </td>
                                 <td>
                                     <a href="{% url 'vendor_edit' v.pk %}" class="btn btn-soft-primary btn-sm">Edit</a>
-                                    <button class="btn btn-soft-danger btn-sm"
-                                        onclick="confirmDelete('{% url 'vendor_delete' v.pk %}', '{{ v.name }}')">Delete</button>
+                                    <form id="delete-form-{{ v.pk }}" action="{% url 'vendor_delete' v.pk %}" method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="button" class="btn btn-soft-danger btn-sm" onclick="confirmDeleteForm('delete-form-{{ v.pk }}')">Delete</button>
+                                    </form>
                                 </td>
                             </tr>
                             {% empty %}

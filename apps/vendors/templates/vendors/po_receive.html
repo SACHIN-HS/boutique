@@ -17,8 +17,10 @@
                         <table class="table table-hover align-middle mb-3">
                             <thead class="text-muted">
                                 <tr>
-                                    <th>Item Name</th>
+                                    <th>Item Code</th>
                                     <th>Category</th>
+                                    <th>Style</th>
+                                    <th>Gender</th>
                                     <th>Color</th>
                                     <th>Size</th>
                                     <th>Qty</th>
@@ -29,8 +31,10 @@
                             <tbody>
                                 {% for item in po.items.all %}
                                 <tr>
-                                    <td class="fw-semibold">{{ item.item_name }}</td>
+                                    <td class="fw-semibold">{{ item.item_code|default:"-" }}</td>
                                     <td>{{ item.category }}</td>
+                                    <td>{{ item.variant_style.name|default:"-" }}</td>
+                                    <td>{{ item.variant_gender.name|default:"-" }}</td>
                                     <td>{{ item.color }}</td>
                                     <td>{{ item.size }}</td>
                                     <td>{{ item.qty }}</td>

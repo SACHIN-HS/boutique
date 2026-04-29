@@ -153,8 +153,10 @@
                                         <table class="table table-sm mb-0">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th>Item Name</th>
+                                                    <th>Item Code</th>
                                                     <th>Category</th>
+                                                    <th>Style</th>
+                                                    <th>Gender</th>
                                                     <th>Color / Size</th>
                                                     <th class="text-center">Qty</th>
                                                     <th class="text-end">Unit Price</th>
@@ -165,8 +167,10 @@
                                             <tbody>
                                                 {% for item in po.items.all %}
                                                 <tr>
-                                                    <td class="fw-medium">{{ item.item_name }}</td>
+                                                    <td>{{ item.item_code|default:"-" }}</td>
                                                     <td>{{ item.category }}</td>
+                                                    <td>{{ item.variant_style.name|default:"-" }}</td>
+                                                    <td>{{ item.variant_gender.name|default:"-" }}</td>
                                                     <td>{{ item.color }} / {{ item.size }}</td>
                                                     <td class="text-center">{{ item.qty }}</td>
                                                     <td class="text-end">${{ item.unit_price }}</td>
@@ -186,7 +190,7 @@
                                             {% if po.remarks %}
                                             <tfoot>
                                                 <tr>
-                                                    <td colspan="7" class="bg-light-subtle py-2 px-3">
+                                                    <td colspan="9" class="bg-light-subtle py-2 px-3">
                                                         <small class="text-muted"><strong>Admin Remarks:</strong> {{
                                                             po.remarks }}</small>
                                                     </td>

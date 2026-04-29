@@ -1,0 +1,245 @@
+{% load static %}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Print SKU</title>
+    <style>
+        :root{
+            --label-w: 89mm;
+            --label-h: 36mm;
+            --pad: 2.5mm;
+            --border: 0.6mm;
+            --barcode-h: 12mm;
+            --barcode-h-small: 10mm;
+            --side-strip-w: 7.5mm;
+        }
+
+        *{ box-sizing: border-box; }
+
+        @page {
+            size: auto;
+            margin: 4mm;
+        }
+
+        body { font-family: Arial, sans-serif; margin: 10px; }
+        .muted { color: #666; }
+        .sheet {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, var(--label-w));
+            gap: 6mm;
+            justify-content: start;
+        }
+        .label {
+            width: var(--label-w);
+            height: var(--label-h);
+            border: var(--border) solid #111;
+            border-radius: 3mm;
+            padding: var(--pad);
+            background: #fff;
+            page-break-inside: avoid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .side-strip{
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: var(--side-strip-w);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+        .side-left{ left: 0; }
+        .side-right{ right: 0; }
+        .side-text{
+            writing-mode: vertical-rl;
+            transform: rotate(180deg); /* bottom-to-top */
+            font-weight: 800;
+            font-size: 10pt;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+            color: #000;
+        }
+
+        .content{
+            position: absolute;
+            left: var(--side-strip-w);
+            right: var(--side-strip-w);
+            top: 0;
+            bottom: 0;
+            padding: var(--pad);
+            display: grid;
+            grid-template-columns: 1fr 16mm;
+            grid-template-rows: 5mm auto auto;
+            grid-template-areas:
+                "item right"
+                "po   right"
+                "cost right";
+            column-gap: 1.6mm;
+            row-gap: 1.4mm;
+            align-content: center;
+            overflow: hidden;
+        }
+
+        .content-top{
+            grid-area: item;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 5mm;
+            overflow: hidden;
+        }
+        .item-code{
+            font-weight: 900;
+            font-size: 8.6pt;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-top: 0.2mm;
+        }
+        .right-stack{
+            grid-area: right;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6mm;
+            width: 16mm;
+            align-self: center;
+            overflow: hidden;
+        }
+        .logo{
+            height: 10mm;
+            width: 10mm;
+            object-fit: contain;
+        }
+        .size-label{
+            font-weight: 800;
+            font-size: 7pt;
+            letter-spacing: 0.3px;
+            line-height: 1;
+        }
+        .size-badge{
+            font-weight: 900;
+            font-size: 12pt;
+            line-height: 1;
+            white-space: nowrap;
+            margin-top: -0.4mm;
+        }
+
+        .sku-text{
+            font-weight: 900;
+            font-size: 9.2pt;
+            letter-spacing: 0.3px;
+            text-align: center;
+            margin: 0;
+            line-height: 1.1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
+        }
+
+        .barcode {
+            width: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+        }
+        .barcode svg { width: 100%; max-width: 100%; height: var(--barcode-h); overflow: hidden; }
+        .barcode.small svg { height: var(--barcode-h-small); }
+        .barcode-num { font-size: 8.6pt; font-weight: 900; text-align: center; margin-top: 0.4mm; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .barcode.po { grid-area: po; }
+        .barcode.cost { grid-area: cost; }
+        .barcode.po { align-self: center; }
+        .barcode.po { margin-bottom: 3mm; }
+        .barcode.cost { align-self: center; }
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+            .label { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+
+    <div class="sheet">
+        {% for item in labels %}
+        <div class="label">
+            <div class="side-strip side-left">
+                <div class="side-text">{{ item.purchase_order.po_number }}</div>
+            </div>
+            <div class="side-strip side-right">
+                <div class="side-text">${{ item.reseller_price }}</div>
+            </div>
+
+            <div class="content">
+               
+                <div class="barcode po" data-barcode="{{ item.po_sku|default:'' }}">
+                    <div class="sku-text">{{ item.po_sku|default:"-" }}</div>
+                    <svg class="barcode-svg"></svg>
+                </div>
+
+                <div class="barcode cost small" data-barcode="{{ item.reseller_sku|default:'' }}">
+                    <svg class="barcode-svg"></svg>
+                    <div class="barcode-num">{{ item.reseller_sku|default:"-" }}</div>
+                </div>
+
+                <div class="right-stack">
+                    <img class="logo" src="{% static 'assets/images/favicon.png' %}" alt="Logo" />
+                    <div class="size-label">SIZE</div>
+                    <div class="size-badge">{{ item.size|default:"" }}</div>
+                </div>
+            </div>
+
+        </div>
+        {% empty %}
+        <div class="muted">No items selected.</div>
+        {% endfor %}
+    </div>
+    <div class="no-print" style="margin-bottom:12px;">
+        <button onclick="window.print()">Print</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script>
+        window.addEventListener('load', function () {
+            document.querySelectorAll('.barcode').forEach(function (el) {
+                const val = (el.getAttribute('data-barcode') || '').trim();
+                const svg = el.querySelector('.barcode-svg');
+                if (!svg) return;
+
+                if (!val) {
+                    svg.innerHTML = '';
+                    return;
+                }
+
+                try {
+                    // CODE128 supports alphanumeric + hyphen
+                    const isSmall = el.classList.contains('small');
+                    JsBarcode(svg, val, {
+                        format: "CODE128",
+                        displayValue: false,
+                        margin: 0,
+                        height: isSmall ? 24 : 30,
+                        width: isSmall ? 1.05 : 1.15,
+                    });
+                } catch (e) {
+                    svg.innerHTML = '';
+                }
+            });
+
+            // Auto-open print dialog for quick flow
+            setTimeout(function () { window.print(); }, 300);
+        });
+    </script>
+</body>
+</html>
+

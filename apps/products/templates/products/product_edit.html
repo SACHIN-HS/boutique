@@ -24,12 +24,26 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">SKU <span class="text-danger">*</span></label>
-                            <input type="text" name="sku" class="form-control" value="{{ product.sku }}" required>
+                            <label class="form-label">Style</label>
+                            <select name="style" class="form-select">
+                                <option value="">Select style</option>
+                                {% for s in styles %}
+                                <option value="{{ s.id }}" {% if product.style_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Slug URL</label>
-                            <input type="text" name="slug" class="form-control" value="{{ product.slug }}">
+                            <label class="form-label">Gender</label>
+                            <select name="gender" class="form-select">
+                                <option value="">Select gender</option>
+                                {% for g in genders %}
+                                <option value="{{ g.id }}" {% if product.gender_id == g.id %}selected{% endif %}>{{ g.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">SKU <span class="text-danger">*</span></label>
+                            <input type="text" name="sku" class="form-control" value="{{ product.sku }}" readonly>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Description</label>
@@ -43,13 +57,17 @@
                             <label class="form-label">Discount (%)</label>
                             <input type="number" name="discount" class="form-control" value="{{ product.discount }}" min="0" max="100">
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Reseller Price</label>
+                            <input type="number" name="reseller_price" class="form-control" value="{{ product.reseller_price }}" step="0.01" min="0">
+                        </div>
                         <div class="col-12">
                             <label class="form-label">Sizes</label>
                             <div class="d-flex flex-wrap gap-2">
                                 {% for sz in sizes %}
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="sizes" value="{{ sz }}" id="sz_{{ sz }}"
-                                        {% if sz in product.sizes %}checked{% endif %}>
+                                        {% if sz|lower in selected_sizes %}checked{% endif %}>
                                     <label class="form-check-label" for="sz_{{ sz }}">{{ sz }}</label>
                                 </div>
                                 {% endfor %}
@@ -61,7 +79,7 @@
                                 {% for c in colors %}
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="colors" value="{{ c }}" id="col_{{ c }}"
-                                        {% if c in product.colors %}checked{% endif %}>
+                                        {% if c|lower in selected_colors %}checked{% endif %}>
                                     <label class="form-check-label" for="col_{{ c }}">{{ c }}</label>
                                 </div>
                                 {% endfor %}
@@ -80,13 +98,24 @@
                             <input type="text" name="meta_description" class="form-control" value="{{ product.meta_description }}">
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Product Image</label>
+                            <label class="form-label">Product Image <span class="text-danger">*</span></label>
                             {% if product.image %}
                             <div class="mb-2">
                                 <img src="{{ product.image.url }}" alt="{{ product.name }}" style="height:80px;border-radius:8px;">
                             </div>
                             {% endif %}
                             <input type="file" name="image" class="form-control" accept="image/*">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Add More Images (multiple) <span class="text-danger">*</span></label>
+                            <input type="file" name="images" class="form-control" accept="image/*" multiple>
+                            {% if product.images.all %}
+                            <div class="mt-2 d-flex flex-wrap gap-2">
+                                {% for im in product.images.all %}
+                                <img src="{{ im.image.url }}" alt="Image" style="height:60px;width:60px;object-fit:cover;border-radius:8px;">
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="col-12 d-flex gap-2">
                             <button type="submit" class="btn btn-success">Update Product</button>
