@@ -59,7 +59,7 @@
                 </thead>
                 <tbody>
                     {% for po in pos %}
-                    <tr class="order-row {% if selected_po and selected_po.id == po.id %}is-selected{% endif %}" id="po-row-{{ po.id }}">
+                    <tr class="order-row {% if selected_po and selected_po.id == po.id %}is-selected{% endif %}" id="po-row-{{ po.id }}" data-po-id="{{ po.id }}" style="cursor: pointer;">
                         <td class="fw-semibold">
                             <a href="#" class="po-link" data-po-id="{{ po.id }}">
                                 {{ po.po_number }}
@@ -218,6 +218,7 @@
 
         onReady(function () {
             var links = document.querySelectorAll('.po-link');
+            var rows = document.querySelectorAll('.order-row[data-po-id]');
             var modalEl = document.getElementById('poItemsModal');
             var modalTitle = document.getElementById('poItemsModalLabel');
             var modalSubtitle = document.getElementById('poItemsModalSubtitle');
@@ -228,32 +229,51 @@
                 modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
             }
 
+            function openPo(poId, poNumberText) {
+                var template = document.getElementById('po-items-template-' + poId);
+                var row = document.getElementById('po-row-' + poId);
+
+                if (!template || !modalBody) return;
+
+                clearSelection();
+                if (row) row.classList.add('is-selected');
+
+                if (modalTitle) modalTitle.textContent = 'PO Items Details';
+                if (modalSubtitle) modalSubtitle.textContent = 'Showing items for PO #' + (poNumberText || '').replace(/^\s+|\s+$/g, '');
+                modalBody.innerHTML = template.innerHTML;
+
+                if (modal) {
+                    modal.show();
+                } else if (modalEl) {
+                    modalEl.classList.add('show');
+                    modalEl.style.display = 'block';
+                }
+            }
+
             for (var i = 0; i < links.length; i++) {
                 (function (link) {
                     link.addEventListener('click', function (e) {
                         if (e && e.preventDefault) e.preventDefault();
 
                         var poId = link.getAttribute('data-po-id');
-                        var template = document.getElementById('po-items-template-' + poId);
-                        var row = document.getElementById('po-row-' + poId);
-
-                        if (!template || !modalBody) return;
-
-                        clearSelection();
-                        if (row) row.classList.add('is-selected');
-
-                        if (modalTitle) modalTitle.textContent = 'PO Items Details';
-                        if (modalSubtitle) modalSubtitle.textContent = 'Showing items for PO #' + (link.textContent || '').replace(/^\s+|\s+$/g, '');
-                        modalBody.innerHTML = template.innerHTML;
-
-                        if (modal) {
-                            modal.show();
-                        } else if (modalEl) {
-                            modalEl.classList.add('show');
-                            modalEl.style.display = 'block';
-                        }
+                        openPo(poId, link.textContent || '');
                     });
                 })(links[i]);
+            }
+
+            for (var j = 0; j < rows.length; j++) {
+                (function (rowEl) {
+                    rowEl.addEventListener('click', function (e) {
+                        // If user clicked the link, let the link handler run (it opens the same modal).
+                        var target = e && e.target ? e.target : null;
+                        if (target && target.closest && target.closest('a.po-link')) return;
+
+                        var poId = rowEl.getAttribute('data-po-id');
+                        var linkEl = rowEl.querySelector('a.po-link');
+                        var poText = linkEl ? (linkEl.textContent || '') : '';
+                        openPo(poId, poText);
+                    });
+                })(rows[j]);
             }
         });
     })();

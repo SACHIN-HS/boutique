@@ -12,7 +12,7 @@
             </div>
         </div>
 
-        <form method="POST" id="po-form">
+        <form method="POST" id="po-form" class="needs-validation" novalidate>
             {% csrf_token %}
             <div class="card">
                 <div class="card-header bg-transparent border-bottom py-3">
@@ -37,7 +37,10 @@
                             </thead>
                             <tbody id="items-body">
                                 <tr>
-                                    <td><input type="text" name="item_code" class="form-control" placeholder="Item code" required></td>
+                                    <td>
+                                        <input type="text" name="item_code" class="form-control" placeholder="Item code" required>
+                                        <div class="invalid-feedback">Required</div>
+                                    </td>
                                     <td>
                                         <select name="item_category" class="form-select">
                                             <option value="">Select</option>
@@ -64,18 +67,25 @@
                                     </td>
                                     <td><input type="text" name="item_color" class="form-control" placeholder="Color"></td>
                                     <td>
-                                        <select name="item_size" class="form-select">
+                                        <select name="item_size" class="form-select" required>
                                             <option value="">Select</option>
                                             {% for size in sizes %}
                                             <option value="{{ size }}">{{ size }}</option>
                                             {% endfor %}
                                         </select>
+                                        <div class="invalid-feedback">Required</div>
                                     </td>
-                                    <td><input type="number" name="item_qty" class="form-control qty-input" min="1" value="1" required></td>
-                                    <td><input type="number" step="0.01" name="item_price" class="form-control price-input" placeholder="0.00" required></td>
+                                    <td>
+                                        <input type="number" name="item_qty" class="form-control qty-input" min="1" value="1" required>
+                                        <div class="invalid-feedback">Required</div>
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.01" name="item_price" class="form-control price-input" placeholder="0.00" min="0" required>
+                                        <div class="invalid-feedback">Required</div>
+                                    </td>
                                     <td class="text-end fw-bold pt-3"><span class="line-total">0.00</span></td>
                                     <td class="text-center">
-                                        <button type="button" class="btn btn-soft-danger btn-sm remove-row" disabled>
+                                        <button type="button" class="btn btn-soft-danger btn-sm remove-row">
                                             <i class="ri-delete-bin-line"></i>
                                         </button>
                                     </td>
@@ -126,6 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableBody = document.getElementById('items-body');
     const addItemBtn = document.getElementById('add-item');
     const grandTotalEl = document.getElementById('grand-total');
+    const form = document.getElementById('po-form');
 
     function calculateTotals() {
         let total = 0;
@@ -140,37 +151,57 @@ document.addEventListener('DOMContentLoaded', function() {
         grandTotalEl.innerText = `Total: $${total.toFixed(2)}`;
     }
 
+    function updateRemoveButtons() {
+        const rows = tableBody.querySelectorAll('tr');
+        rows.forEach(r => {
+            const btn = r.querySelector('.remove-row');
+            if (btn) btn.disabled = (rows.length === 1);
+        });
+    }
+
     addItemBtn.addEventListener('click', function() {
         const newRow = tableBody.rows[0].cloneNode(true);
         // Clear inputs
         newRow.querySelectorAll('input').forEach(input => {
             if (input.name !== 'item_qty') input.value = '';
             else input.value = '1';
+            input.classList.remove('is-invalid');
         });
         newRow.querySelectorAll('select').forEach(select => {
             select.selectedIndex = 0;
+            select.classList.remove('is-invalid');
         });
         newRow.querySelector('.line-total').innerText = '0.00';
-        newRow.querySelector('.remove-row').disabled = false;
         tableBody.appendChild(newRow);
         
         // Add listeners to new row
         addRowEventListeners(newRow);
+        updateRemoveButtons();
     });
 
     function addRowEventListeners(row) {
         row.querySelector('.qty-input').addEventListener('input', calculateTotals);
         row.querySelector('.price-input').addEventListener('input', calculateTotals);
         row.querySelector('.remove-row').addEventListener('click', function() {
-            if (tableBody.rows.length > 1) {
-                row.remove();
-                calculateTotals();
-            }
+            if (tableBody.rows.length <= 1) return;
+            row.remove();
+            calculateTotals();
+            updateRemoveButtons();
         });
     }
 
+    // Bootstrap-style validation UI: red border + "Required"
+    form.addEventListener('submit', function (event) {
+        form.classList.add('was-validated');
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }, false);
+
     // Initialize first row
     addRowEventListeners(tableBody.rows[0]);
+    updateRemoveButtons();
 });
 </script>
 {% endblock %}
