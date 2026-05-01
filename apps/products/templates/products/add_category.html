@@ -10,7 +10,7 @@
                 <div class="card">
                     <div class="card-header"><h5 class="card-title mb-0">{% if edit_category %}Edit Category{% else %}Add Category{% endif %}</h5></div>
                     <div class="card-body">
-                        <form method="post" action="{% if edit_category %}{% url 'edit_category' edit_category.id %}{% else %}{% url 'add_category' %}{% endif %}">
+                        <form method="post" action="{% if edit_category %}{% url 'edit_category' edit_category.id %}{% else %}{% url 'add_category' %}{% endif %}" novalidate>
                             {% csrf_token %}
                             <div class="mb-3">
                                 <label class="form-label">Category Name</label>
@@ -48,9 +48,9 @@
                                         <td>{{ category.slug }}</td>
                                         <td class="text-end">
                                             <a href="{% url 'edit_category' category.id %}" class="btn btn-sm btn-soft-primary">Edit</a>
-                                            <form method="post" action="{% url 'delete_category' category.id %}" class="d-inline" onsubmit="return confirm('Delete this category?');">
+                                            <form method="post" action="{% url 'delete_category' category.id %}" class="d-inline" id="delete-form-cat-{{ category.id }}">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-soft-danger">Delete</button>
+                                                <button type="button" class="btn btn-sm btn-soft-danger" onclick="confirmDeleteForm('delete-form-cat-{{ category.id }}')">Delete</button>
                                             </form>
                                         </td>
                                     </tr>

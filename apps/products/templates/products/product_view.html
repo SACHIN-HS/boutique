@@ -18,11 +18,14 @@
                         <thead class="text-muted">
                             <tr>
                                 <th>#</th>
+                                <th>Product img</th>
                                 <th>Product</th>
                                 <th>Category</th>
+                                <th>Style</th>
+                                <th>Gender</th>
                                 <th>SKU</th>
                                 <th>Qty</th>
-                                <th>Discount</th>
+                                <th>Price</th>
                                 <th>Sizes</th>
                                 <th>Colors</th>
                                 <th>Actions</th>
@@ -33,30 +36,37 @@
                             <tr>
                                 <td>{{ forloop.counter }}</td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        {% if p.image %}
-                                        <img src="{{ p.image.url }}" alt="{{ p.name }}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">
-                                        {% endif %}
-                                        <div>
-                                            <div class="fw-semibold">{{ p.name }}</div>
-                                            <small class="text-muted">/{{ p.slug }}</small>
-                                        </div>
-                                    </div>
+                                    {% if p.images.first %}
+                                    <img src="{{ p.images.first.image.url }}" alt="{{ p.name }}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">
+                                    {% elif p.image %}
+                                    <img src="{{ p.image.url }}" alt="{{ p.name }}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;">
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">{{ p.name }}</div>
                                 </td>
                                 <td>{{ p.category }}</td>
+                                <td>{{ p.style.name|default:"-" }}</td>
+                                <td>{{ p.gender.name|default:"-" }}</td>
                                 <td>{{ p.sku }}</td>
                                 <td>{{ p.qty }}</td>
-                                <td>{{ p.discount }}%</td>
+                                <td>${{ p.reseller_price }}</td>
                                 <td>{{ p.sizes|default:"-" }}</td>
                                 <td>{{ p.colors|default:"-" }}</td>
                                 <td>
                                     <a href="{% url 'product_edit' p.pk %}" class="btn btn-soft-warning btn-sm">Edit</a>
-                                    <a href="{% url 'product_delete' p.pk %}" class="btn btn-soft-danger btn-sm"
-                                        onclick="return confirm('Delete {{ p.name }}?')">Delete</a>
+                                    <button
+                                        class="btn btn-soft-danger btn-sm"
+                                        data-url="{% url 'product_delete' p.pk %}"
+                                        data-name="{{ p.name }}"
+                                        onclick="confirmDelete(this.dataset.url, this.dataset.name)"
+                                    >Delete</button>
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="9" class="text-center text-muted py-4">No products yet. <a href="{% url 'product_add' %}">Add one</a>.</td></tr>
+                            <tr><td colspan="12" class="text-center text-muted py-4">No products yet. <a href="{% url 'product_add' %}">Add one</a>.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>

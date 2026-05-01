@@ -1,0 +1,72 @@
+{% extends 'dashboard/base.html' %}
+{% block page_title %}Add Gender{% endblock %}
+{% block breadcrumb %}Add Gender{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header"><h5 class="card-title mb-0">{% if edit_gender %}Edit Gender{% else %}Add Gender{% endif %}</h5></div>
+                    <div class="card-body">
+                        <form method="post" action="{% if edit_gender %}{% url 'edit_gender' edit_gender.id %}{% else %}{% url 'add_gender' %}{% endif %}" novalidate>
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Gender Name</label>
+                                <input type="text" name="name" class="form-control" placeholder="Enter gender name" value="{% if edit_gender %}{{ edit_gender.name }}{% endif %}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Slug</label>
+                                <input type="text" name="slug" class="form-control" placeholder="e.g. men" value="{% if edit_gender %}{{ edit_gender.slug }}{% endif %}">
+                            </div>
+                            <button type="submit" class="btn btn-primary">{% if edit_gender %}Update Gender{% else %}Save Gender{% endif %}</button>
+                            {% if edit_gender %}
+                            <a href="{% url 'add_gender' %}" class="btn btn-light">Cancel</a>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header"><h5 class="card-title mb-0">Gender List</h5></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Gender Name</th>
+                                        <th>Slug</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for gender in genders %}
+                                    <tr>
+                                        <td>{{ gender.name }}</td>
+                                        <td>{{ gender.slug }}</td>
+                                        <td class="text-end">
+                                            <a href="{% url 'edit_gender' gender.id %}" class="btn btn-sm btn-soft-primary">Edit</a>
+                                            <form method="post" action="{% url 'delete_gender' gender.id %}" class="d-inline" id="delete-form-gender-{{ gender.id }}">
+                                                {% csrf_token %}
+                                                <button type="button" class="btn btn-sm btn-soft-danger" onclick="confirmDeleteForm('delete-form-gender-{{ gender.id }}')">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">No genders found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

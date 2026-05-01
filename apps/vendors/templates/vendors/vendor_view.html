@@ -1,6 +1,9 @@
 {% extends 'dashboard/base.html' %}
+{% load static %}
 {% block page_title %}Vendors{% endblock %}
 {% block breadcrumb %}Vendors{% endblock %}
+
+
 
 {% block content %}
 <div class="row">
@@ -43,8 +46,10 @@
                                 </td>
                                 <td>
                                     <a href="{% url 'vendor_edit' v.pk %}" class="btn btn-soft-primary btn-sm">Edit</a>
-                                    <a href="{% url 'vendor_delete' v.pk %}" class="btn btn-soft-danger btn-sm"
-                                        onclick="return confirm('Delete {{ v.name }}?')">Delete</a>
+                                    <form id="delete-form-{{ v.pk }}" action="{% url 'vendor_delete' v.pk %}" method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="button" class="btn btn-soft-danger btn-sm" onclick="confirmDeleteForm('delete-form-{{ v.pk }}')">Delete</button>
+                                    </form>
                                 </td>
                             </tr>
                             {% empty %}
@@ -58,12 +63,38 @@
     </div>
 </div>
 
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1056;">
+    <div id="borderedToast2" class="toast toast-border-success overflow-hidden mt-3" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 me-2">
+                    <i class="ri-checkbox-circle-fill align-middle"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h6 class="mb-0">Yey! Portal Link Copied!</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
+function showToast() {
+    const toastEl = document.getElementById('borderedToast2');
+    if (toastEl) {
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+}
+
 function copyPortalLink(url) {
     if (navigator.clipboard && window.isSecureContext) {
         // Safe context, use modern API
         navigator.clipboard.writeText(url).then(() => {
-            alert('Portal Link copied to clipboard!');
+            showToast();
         }).catch(err => {
             console.error('Modern copy failed, trying fallback:', err);
             fallbackCopy(url);
@@ -86,7 +117,7 @@ function fallbackCopy(text) {
     try {
         const successful = document.execCommand('copy');
         if (successful) {
-            alert('Portal Link copied to clipboard!');
+            showToast();
         } else {
             console.error('Fallback copy was unsuccessful');
         }

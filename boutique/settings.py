@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'apps.orders',
     'apps.accounting',
     'apps.tailoring',
+    # 'apps.website',
 ]
 
 MIDDLEWARE = [
@@ -141,7 +142,9 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Session settings
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 1800  # 30 minutes
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # close browser 
 
 # Security settings
 # SECURE_BROWSER_XSS_FILTER = True

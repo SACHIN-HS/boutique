@@ -1,0 +1,72 @@
+{% extends 'dashboard/base.html' %}
+{% block page_title %}Add Style{% endblock %}
+{% block breadcrumb %}Add Style{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header"><h5 class="card-title mb-0">{% if edit_style %}Edit Style{% else %}Add Style{% endif %}</h5></div>
+                    <div class="card-body">
+                        <form method="post" action="{% if edit_style %}{% url 'edit_style' edit_style.id %}{% else %}{% url 'add_style' %}{% endif %}" novalidate>
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Style Name</label>
+                                <input type="text" name="name" class="form-control" placeholder="Enter style name" value="{% if edit_style %}{{ edit_style.name }}{% endif %}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Slug</label>
+                                <input type="text" name="slug" class="form-control" placeholder="e.g. casual-wear" value="{% if edit_style %}{{ edit_style.slug }}{% endif %}">
+                            </div>
+                            <button type="submit" class="btn btn-primary">{% if edit_style %}Update Style{% else %}Save Style{% endif %}</button>
+                            {% if edit_style %}
+                            <a href="{% url 'add_style' %}" class="btn btn-light">Cancel</a>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header"><h5 class="card-title mb-0">Style List</h5></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Style Name</th>
+                                        <th>Slug</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for style in styles %}
+                                    <tr>
+                                        <td>{{ style.name }}</td>
+                                        <td>{{ style.slug }}</td>
+                                        <td class="text-end">
+                                            <a href="{% url 'edit_style' style.id %}" class="btn btn-sm btn-soft-primary">Edit</a>
+                                            <form method="post" action="{% url 'delete_style' style.id %}" class="d-inline" id="delete-form-style-{{ style.id }}">
+                                                {% csrf_token %}
+                                                <button type="button" class="btn btn-sm btn-soft-danger" onclick="confirmDeleteForm('delete-form-style-{{ style.id }}')">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">No styles found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
