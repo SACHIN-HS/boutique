@@ -25,6 +25,17 @@ class VariantSize(models.Model):
         return self.name
 
 
+class VariantColor(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class VariantStyle(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=120, unique=True, blank=True)
@@ -83,6 +94,19 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ProductVariant(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="variants")
+    color = models.CharField(max_length=100, blank=True)
+    size = models.CharField(max_length=100, blank=True)
+    sku = models.CharField(max_length=100, unique=True)
+    qty = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.color}/{self.size} ({self.qty})"
 
 
 class ProductImage(models.Model):

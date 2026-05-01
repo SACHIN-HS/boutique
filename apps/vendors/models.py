@@ -42,6 +42,7 @@ class PurchaseOrder(models.Model):
     grand_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     remarks = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.po_number
@@ -51,6 +52,8 @@ class PurchaseOrderItem(models.Model):
     ITEM_STATUS_CHOICES = [
         ("Pending", "Pending"),
         ("Verified", "Verified"),
+        ("All Defective", "All Defective"),
+        ("Missing", "Missing"),
         ("Defective", "Defective"),
     ]
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name="items")
@@ -76,6 +79,8 @@ class PurchaseOrderItem(models.Model):
     color = models.CharField(max_length=50, blank=True)
     size = models.CharField(max_length=50, blank=True)
     qty = models.PositiveIntegerField(default=0)
+    missing_qty = models.PositiveIntegerField(default=0)
+    defective_qty = models.PositiveIntegerField(default=0)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_value = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=ITEM_STATUS_CHOICES, default="Pending")
@@ -83,6 +88,11 @@ class PurchaseOrderItem(models.Model):
     # Legacy fields for inventory/dashboard tracking
     received = models.BooleanField(default=False)
     sku_printed = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def valid_qty(self):
+        return max(0, self.qty - self.missing_qty - self.defective_qty)
 
     @property
     def name(self):

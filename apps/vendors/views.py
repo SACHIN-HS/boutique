@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
+from django.db.models import Max
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password, check_password
 from .models import Vendor, PurchaseOrder, PurchaseOrderItem, PurchaseOrderVerification
@@ -75,6 +76,19 @@ def vendor_delete(request, pk):
 
 @login_required(login_url='login')
 def po_list(request):
+    if (request.GET.get("poll") or "").strip() == "1":
+        latest_po = PurchaseOrder.objects.aggregate(m=Max("updated_at")).get("m")
+        latest_item = PurchaseOrderItem.objects.aggregate(m=Max("updated_at")).get("m")
+        latest = max([d for d in [latest_po, latest_item] if d is not None], default=None)
+        from django.http import JsonResponse
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "latest": latest.isoformat() if latest else None,
+            }
+        )
+
     pos = PurchaseOrder.objects.select_related('vendor').prefetch_related('items').order_by('-created_at')
     date_from = request.GET.get('from', '')
     date_to = request.GET.get('to', '')
@@ -104,82 +118,6 @@ def po_list(request):
         'stock_summary': stock_summary,
         'date_from': date_from, 'date_to': date_to,
         'selected_po': selected_po,
-    })
-
-
-
-@login_required(login_url='login')
-def po_create(request):
-    # This remains as an admin-side manual PO creation tool if needed
-    vendors = Vendor.objects.filter(is_active=True).order_by('name')
-    if request.method == 'POST':
-        vendor_id = request.POST.get('vendor')
-        vendor = get_object_or_404(Vendor, pk=vendor_id)
-        tmp_po_number = f"TMP-{uuid.uuid4().hex[:12]}"
-        po = PurchaseOrder.objects.create(vendor=vendor, po_number=tmp_po_number, status="Submitted")
-        po.po_number = _po_number_from_id(po.id)
-        po.save(update_fields=["po_number"])
-
-        codes = request.POST.getlist('item_code')
-        categories = request.POST.getlist('item_category')
-        styles = request.POST.getlist('item_style')
-        genders = request.POST.getlist('item_gender')
-        qtys = request.POST.getlist('item_qty')
-        prices = request.POST.getlist('item_price')
-        colors = request.POST.getlist('item_color')
-        sizes = request.POST.getlist('item_size')
-
-        grand_total = 0
-        for i in range(max(len(codes), len(categories), len(styles), len(genders), len(qtys), len(prices), len(colors), len(sizes))):
-            qty = int(qtys[i] or 0)
-            price = float(prices[i] or 0)
-            code_val = (codes[i].strip() if i < len(codes) and (codes[i] or '').strip() else '')
-            cat_val = (categories[i] if i < len(categories) else '')
-            style_val = (styles[i] if i < len(styles) else '')
-            gender_val = (genders[i] if i < len(genders) else '')
-            color_val = (colors[i] if i < len(colors) else '')
-            size_val = (sizes[i] if i < len(sizes) else '')
-
-            # Skip completely empty rows
-            if not any([code_val, cat_val, style_val, gender_val, color_val, size_val]) and qty <= 0 and price <= 0:
-                continue
-
-            total_val = qty * price
-            grand_total += total_val
-            style_obj = None
-            gender_obj = None
-            try:
-                style_id = style_val
-                if style_id:
-                    style_obj = VariantStyle.objects.filter(pk=int(style_id)).first()
-            except (TypeError, ValueError):
-                style_obj = None
-            try:
-                gender_id = gender_val
-                if gender_id:
-                    gender_obj = VariantGender.objects.filter(pk=int(gender_id)).first()
-            except (TypeError, ValueError):
-                gender_obj = None
-            PurchaseOrderItem.objects.create(
-                purchase_order=po,
-                item_code=code_val,
-                category=cat_val,
-                qty=qty, unit_price=price, total_value=total_val,
-                color=color_val,
-                size=size_val,
-                variant_style=style_obj,
-                variant_gender=gender_obj,
-            )
-        po.grand_total = grand_total
-        po.save()
-        messages.success(request, f'Purchase Order {po.po_number} created!')
-        return redirect('po_list')
-    return render(request, 'vendors/po_create.html', {
-        'vendors': vendors,
-        'categories': VariantCategory.objects.values_list('name', flat=True),
-        'sizes': VariantSize.objects.values_list('name', flat=True),
-        'styles': VariantStyle.objects.all(),
-        'genders': VariantGender.objects.all(),
     })
 
 
@@ -350,14 +288,36 @@ def portal_po_items(request, token, po_number):
     )
 
     if request.method == 'POST':
-        allowed = {'Pending', 'Verified', 'Defective'}
+        allowed = {'Pending', 'Verified', 'All Defective', 'Missing', 'Defective'}
         items = list(po.items.all())
         all_processed = True
         any_verified = False
         
         for item in items:
             new_status = (request.POST.get(f"status_{item.id}") or '').strip()
+            deduct_qty_str = request.POST.get(f"qty_deduct_{item.id}")
+            
             if new_status and new_status in allowed:
+                deduct_qty = 0
+                if new_status in ['Missing', 'Defective'] and deduct_qty_str:
+                    try:
+                        deduct_qty = int(deduct_qty_str)
+                    except ValueError:
+                        deduct_qty = 0
+                elif new_status == 'All Defective':
+                    deduct_qty = item.qty
+                if new_status == 'Missing':
+                    item.missing_qty = deduct_qty
+                    item.defective_qty = 0
+                elif new_status in ['Defective', 'All Defective']:
+                    item.defective_qty = deduct_qty
+                    item.missing_qty = 0
+                else:
+                    item.missing_qty = 0
+                    item.defective_qty = 0
+                
+                item.save(update_fields=['missing_qty', 'defective_qty'])
+
                 if item.status != new_status:
                     item.status = new_status
                     item.save(update_fields=['status'])
@@ -370,11 +330,12 @@ def portal_po_items(request, token, po_number):
                 all_processed = False
 
         # Update overall PO status based on items
+        po.grand_total = sum(i.total_value for i in items)
         if all_processed:
             po.status = "Verified"
         elif any_verified:
             po.status = "Received"
-        po.save(update_fields=['status'])
+        po.save(update_fields=['status', 'grand_total'])
         
         messages.success(request, 'Item statuses updated and PO status reflected.')
 

@@ -50,16 +50,43 @@
                             <textarea name="description" class="form-control" rows="3">{{ product.description }}</textarea>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Quantity</label>
-                            <input type="number" name="qty" class="form-control" value="{{ product.qty }}" min="0">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Discount (%)</label>
-                            <input type="number" name="discount" class="form-control" value="{{ product.discount }}" min="0" max="100">
-                        </div>
-                        <div class="col-md-6">
                             <label class="form-label">Reseller Price</label>
                             <input type="number" name="reseller_price" class="form-control" value="{{ product.reseller_price }}" step="0.01" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Total Quantity (Auto-sum)</label>
+                            <input type="number" name="qty" class="form-control" value="{{ product.qty }}" readonly>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <h6 class="fw-semibold text-primary mb-3">Product Variants (Breakdown)</h6>
+                            <div class="table-responsive border rounded">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Color</th>
+                                            <th>Size</th>
+                                            <th style="width: 120px;">Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for variant in product.variants.all %}
+                                        <tr>
+                                            <td class="fw-medium">{{ variant.color }}</td>
+                                            <td>{{ variant.size }}</td>
+                                            <td>
+                                                <input type="number" name="variant_qty_{{ variant.id }}" class="form-control form-control-sm" value="{{ variant.qty }}" min="0">
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center py-3 text-muted">
+                                                No variants found. They are generated automatically based on Colors/Sizes.
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Sizes</label>

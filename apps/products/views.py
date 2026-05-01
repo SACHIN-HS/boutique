@@ -5,12 +5,14 @@ from django.utils.text import slugify
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
+from django.db.models import Prefetch, Max
 from decimal import Decimal, InvalidOperation
 import json
 import random
 import datetime
 
-from .models import Product, ProductImage, VariantCategory, VariantSize, VariantStyle, VariantGender
+from .models import Product, ProductImage, VariantCategory, VariantSize, VariantStyle, VariantGender, ProductVariant
+DEFAULT_COLORS = ["Red", "Blue", "Yellow", "Green", "Black", "White", "Pink", "Purple"]
 from apps.vendors.models import PurchaseOrder, PurchaseOrderItem
 
 
@@ -41,6 +43,23 @@ def _ensure_product_for_po_item(item: PurchaseOrderItem) -> None:
     if reseller_price_val is None:
         reseller_price_val = Decimal("0")
 
+    # Aggregate all quantities for this SKU across all verified PO items
+    all_po_items = PurchaseOrderItem.objects.filter(po_sku=sku, purchase_order__status="Verified")
+    total_qty = 0
+    unique_colors = set()
+    unique_sizes = set()
+    variant_map = {}
+
+    for pi in all_po_items:
+        v_q = max(0, int(getattr(pi, "qty", 0) or 0) - int(getattr(pi, "missing_qty", 0) or 0) - int(getattr(pi, "defective_qty", 0) or 0))
+        total_qty += v_q
+        c_norm = (pi.color or "").strip().title() or "N/A"
+        s_norm = (pi.size or "").strip() or "N/A"
+        unique_colors.add(c_norm)
+        unique_sizes.add(s_norm)
+        key = (c_norm, s_norm)
+        variant_map[key] = variant_map.get(key, 0) + v_q
+
     prod, created = Product.objects.get_or_create(
         sku=sku,
         defaults={
@@ -49,11 +68,11 @@ def _ensure_product_for_po_item(item: PurchaseOrderItem) -> None:
             "style": style_obj,
             "gender": gender_obj,
             "description": f"Auto-created from PO {item.purchase_order.po_number}",
-            "qty": int(getattr(item, "qty", 0) or 0),
+            "qty": total_qty,
             "discount": 0,
             "reseller_price": reseller_price_val,
-            "sizes": sizes,
-            "colors": colors,
+            "sizes": ", ".join(sorted(list(unique_sizes))),
+            "colors": ", ".join(sorted(list(unique_colors))),
             "slug": slug_val,
             "meta_title": "",
             "meta_tags": "",
@@ -62,37 +81,25 @@ def _ensure_product_for_po_item(item: PurchaseOrderItem) -> None:
     )
 
     if not created:
-        changed = False
-        if prod.name != name and name:
-            prod.name = name
-            changed = True
-        if prod.category != category and category:
-            prod.category = category
-            changed = True
-        qty_val = int(getattr(item, "qty", 0) or 0)
-        if qty_val and prod.qty != qty_val:
-            prod.qty = qty_val
-            changed = True
-        if sizes and not prod.sizes:
-            prod.sizes = sizes
-            changed = True
-        if colors and not prod.colors:
-            prod.colors = colors
-            changed = True
-        if gender_obj and prod.gender_id != getattr(gender_obj, "id", None):
-            prod.gender = gender_obj
-            changed = True
-        if style_obj and prod.style_id != getattr(style_obj, "id", None):
-            prod.style = style_obj
-            changed = True
-        try:
-            if reseller_price_val is not None and prod.reseller_price != reseller_price_val:
-                prod.reseller_price = reseller_price_val
-                changed = True
-        except Exception:
-            pass
-        if changed:
-            prod.save()
+        prod.qty = total_qty
+        prod.colors = ", ".join(sorted(list(unique_colors)))
+        prod.sizes = ", ".join(sorted(list(unique_sizes)))
+        if name and not prod.name: prod.name = name
+        if category and not prod.category: prod.category = category
+        if gender_obj: prod.gender = gender_obj
+        if style_obj: prod.style = style_obj
+        if reseller_price_val is not None: prod.reseller_price = reseller_price_val
+        prod.save()
+
+    # Sync Variants
+    for (color, size), qty in variant_map.items():
+        v_sku = f"{sku}-{slugify(color)}-{slugify(size)}"
+        ProductVariant.objects.update_or_create(
+            product=prod,
+            color=color,
+            size=size,
+            defaults={"qty": qty, "sku": v_sku[:100]}
+        )
 
 
 def _code_from_text(text: str, length: int, fallback: str) -> str:
@@ -182,7 +189,7 @@ def product_add(request):
         'styles': VariantStyle.objects.all(),
         'genders': VariantGender.objects.all(),
         'sizes': VariantSize.objects.values_list('name', flat=True),
-        'colors': ["Red", "Blue", "Yellow", "Green", "Black", "White", "Pink", "Purple"],
+        'colors': VariantColor.objects.values_list('name', flat=True),
     })
 
 
@@ -227,19 +234,38 @@ def product_edit(request, pk):
         if request.FILES.get('image'):
             product.image = request.FILES['image']
         product.save()
+
+        # Update Variant quantities and re-calculate total product quantity
+        total_v_qty = 0
+        for variant in product.variants.all():
+            v_qty_val = request.POST.get(f"variant_qty_{variant.id}")
+            if v_qty_val is not None:
+                try:
+                    variant.qty = int(v_qty_val or 0)
+                    variant.save()
+                except (ValueError, TypeError):
+                    pass
+            total_v_qty += variant.qty
+        
+        # Update product total qty based on sum of variants
+        product.qty = total_v_qty
+        product.save()
+
         for f in request.FILES.getlist("images"):
             ProductImage.objects.create(product=product, image=f)
         messages.success(request, 'Product updated!')
         return redirect('product_view')
     selected_sizes = [s.strip().lower() for s in (product.sizes or "").split(",") if s.strip()]
     selected_colors = [c.strip().lower() for c in (product.colors or "").split(",") if c.strip()]
+    v_colors = product.variants.values_list('color', flat=True).distinct()
+    all_colors = sorted(list(set(DEFAULT_COLORS) | {c for c in v_colors if c and c != "N/A"}))
     return render(request, 'products/product_edit.html', {
         'product': product,
         'categories': VariantCategory.objects.values_list('name', flat=True),
         'styles': VariantStyle.objects.all(),
         'genders': VariantGender.objects.all(),
         'sizes': VariantSize.objects.values_list('name', flat=True),
-        'colors': ["Red", "Blue", "Yellow", "Green", "Black", "White", "Pink", "Purple"],
+        'colors': all_colors,
         'selected_sizes': selected_sizes,
         'selected_colors': selected_colors,
     })
@@ -260,10 +286,28 @@ def product_delete(request, pk):
 
 @login_required(login_url='login')
 def sku_center(request):
+    if (request.GET.get("poll") or "").strip() == "1":
+        latest_po = PurchaseOrder.objects.aggregate(m=Max("updated_at")).get("m")
+        latest_item = PurchaseOrderItem.objects.aggregate(m=Max("updated_at")).get("m")
+        latest = max([d for d in [latest_po, latest_item] if d is not None], default=None)
+        return JsonResponse(
+            {
+                "ok": True,
+                "latest": latest.isoformat() if latest else None,
+            }
+        )
+
     verified_pos = (
         PurchaseOrder.objects.filter(status="Verified")
         .select_related("vendor")
-        .prefetch_related("items", "items__variant_style", "items__variant_gender")
+        .prefetch_related(
+            Prefetch(
+                "items",
+                queryset=PurchaseOrderItem.objects.filter(status__in=["Verified", "Defective", "Missing"]).select_related(
+                    "variant_style", "variant_gender"
+                ),
+            )
+        )
         .order_by("-created_at")
     )
 
@@ -276,7 +320,7 @@ def sku_center(request):
 
     # Backfill Products list from any generated PO SKUs shown on this page.
     items_with_sku = (
-        PurchaseOrderItem.objects.filter(purchase_order__in=verified_pos)
+        PurchaseOrderItem.objects.filter(purchase_order__in=verified_pos, status__in=["Verified", "Defective", "Missing"])
         .exclude(po_sku="")
         .select_related("purchase_order")
     )
@@ -295,6 +339,7 @@ def sku_center(request):
             "date_to": date_to,
             "styles": VariantStyle.objects.all(),
             "categories": VariantCategory.objects.all(),
+            "genders": VariantGender.objects.all(),
         },
     )
 
@@ -332,13 +377,24 @@ def sku_update_item(request):
     category = (payload.get("category") or "").strip()
     item.category = category
 
-    item.save(update_fields=["variant_style", "category"])
+    gender_id = payload.get("variant_gender_id", None)
+    if gender_id in ("", None):
+        item.variant_gender = None
+    else:
+        try:
+            gender_id_int = int(gender_id)
+        except Exception:
+            return JsonResponse({"ok": False, "error": "Invalid gender id."}, status=400)
+        item.variant_gender = get_object_or_404(VariantGender, pk=gender_id_int)
+
+    item.save(update_fields=["variant_style", "category", "variant_gender"])
     return JsonResponse(
         {
             "ok": True,
             "id": item.pk,
             "variant_style": getattr(item.variant_style, "name", "") if item.variant_style_id else "",
             "category": item.category,
+            "variant_gender": getattr(item.variant_gender, "name", "") if item.variant_gender_id else "",
         }
     )
 
@@ -398,7 +454,7 @@ def sku_print(request):
             counts[item_id] = 1
 
     items = list(
-        PurchaseOrderItem.objects.filter(pk__in=ids)
+        PurchaseOrderItem.objects.filter(pk__in=ids, status__in=["Verified", "Defective", "Missing"], purchase_order__status="Verified")
         .select_related("purchase_order__vendor", "variant_style", "variant_gender")
         .order_by("purchase_order__po_number", "pk")
     )
@@ -424,6 +480,8 @@ def sku_item_label(request, item_pk):
     item = get_object_or_404(
         PurchaseOrderItem.objects.select_related("purchase_order__vendor", "variant_style", "variant_gender"),
         pk=item_pk,
+        status__in=["Verified", "Defective", "Missing"],
+        purchase_order__status="Verified",
     )
     try:
         count = int(request.GET.get("count") or 1)
@@ -471,14 +529,36 @@ def sku_generate(request):
     if not ids:
         return JsonResponse({"ok": False, "error": "No valid item ids provided."}, status=400)
 
-    qs = (
-        PurchaseOrderItem.objects.filter(pk__in=ids)
-        .select_related("purchase_order__vendor", "variant_style")
-    )
+    qs = PurchaseOrderItem.objects.filter(
+        pk__in=ids,
+        status__in=["Verified", "Defective", "Missing"],
+        purchase_order__status="Verified",
+    ).select_related("purchase_order__vendor", "variant_style")
+
+    found_ids = set(qs.values_list("pk", flat=True))
+    missing = [i for i in ids if i not in found_ids]
+    if missing:
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": "Some selected items are not Verified and cannot be converted to SKU.",
+                "invalid_item_ids": missing,
+            },
+            status=400,
+        )
 
     updated = []
     now = datetime.date.today()
     for item in qs:
+        if not getattr(item, "variant_style_id", None) or not getattr(item, "variant_gender_id", None) or not getattr(item, "category", "").strip():
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "error": f"Item {item.item_code or item.pk} is missing Style, Gender, or Category. These are mandatory to generate SKUs."
+                },
+                status=400,
+            )
+
         po = item.purchase_order
         vendor = po.vendor if po else None
 
@@ -486,7 +566,7 @@ def sku_generate(request):
         vendor_name = getattr(vendor, "name", "") if vendor else ""
         category_name = (item.category or "").strip()
 
-        style_code = _code_from_text(style_name, 3, "STY")
+        style_code = (item.variant_style.slug or _code_from_text(style_name, 3, "STY")) if item.variant_style_id else _code_from_text(style_name, 3, "STY")
         category_code = _code_from_text(category_name, 1, "C")
         vendor_code = _code_from_text(vendor_name, 3, "VND")
 
@@ -533,7 +613,7 @@ def sku_generate(request):
 
 @login_required(login_url='login')
 def sku_mark_printed(request, item_pk):
-    item = get_object_or_404(PurchaseOrderItem, pk=item_pk)
+    item = get_object_or_404(PurchaseOrderItem, pk=item_pk, status__in=["Verified", "Defective", "Missing"], purchase_order__status="Verified")
     item.sku_printed = True
     item.save()
     messages.success(request, f'SKU marked as printed for {item.name}.')

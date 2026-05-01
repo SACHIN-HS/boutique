@@ -172,14 +172,22 @@
                         <td>{{ item.variant_gender.name|default:"-" }}</td>
                         <td>{{ item.color }}</td>
                         <td>{{ item.size }}</td>
-                        <td>{{ item.qty }}</td>
+                        <td class="text-nowrap">
+                            {{ item.qty }}
+                            {% if item.missing_qty %}<span class="text-danger ms-1">(-{{ item.missing_qty }} Missing)</span>{% endif %}
+                            {% if item.defective_qty %}<span class="text-danger ms-1">(-{{ item.defective_qty }} Defective)</span>{% endif %}
+                        </td>
                         <td>${{ item.unit_price }}</td>
                         <td>${{ item.total_value }}</td>
                         <td>
                             {% if item.status == 'Verified' %}
                             <span class="badge bg-success-subtle text-success">Verified</span>
+                            {% elif item.status == 'All Defective' %}
+                            <span class="badge bg-danger-subtle text-danger">All Defective</span>
+                            {% elif item.status == 'Missing' %}
+                            <span class="badge bg-warning text-dark">Missing</span>
                             {% elif item.status == 'Defective' %}
-                            <span class="badge bg-danger-subtle text-danger">Defective</span>
+                            <span class="badge bg-warning text-dark">Defective</span>
                             {% else %}
                             <span class="badge bg-warning-subtle text-warning">Pending</span>
                             {% endif %}
@@ -201,6 +209,26 @@
 {% block extra_js %}
 <script>
     (function () {
+        // Auto-refresh when POs/items change (vendor portal verification, new POs, etc.)
+        let lastLatest = null;
+        async function pollChanges() {
+            try {
+                const res = await fetch(window.location.pathname + "?poll=1", { headers: { "Accept": "application/json" } });
+                const data = await res.json();
+                if (!data || !data.ok) return;
+                if (lastLatest === null) {
+                    lastLatest = data.latest || null;
+                    return;
+                }
+                if ((data.latest || null) !== lastLatest) {
+                    window.location.reload();
+                }
+            } catch (e) {
+                // ignore transient network errors
+            }
+        }
+        setInterval(pollChanges, 5000);
+
         function clearSelection() {
             var selected = document.querySelectorAll('.order-row.is-selected');
             for (var i = 0; i < selected.length; i++) {

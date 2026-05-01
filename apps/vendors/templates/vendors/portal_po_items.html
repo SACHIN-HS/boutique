@@ -109,13 +109,22 @@
                                         <td>{{ item.variant_gender.name|default:"-" }}</td>
                                         <td>{{ item.color }}</td>
                                         <td>{{ item.size }}</td>
-                                        <td class="text-center">{{ item.qty }}</td>
+                                        <td class="text-center text-nowrap">
+                                            {{ item.qty }}
+                                            {% if item.missing_qty %}<span class="text-danger ms-1">(-{{ item.missing_qty }} Missing)</span>{% endif %}
+                                            {% if item.defective_qty %}<span class="text-danger ms-1">(-{{ item.defective_qty }} Defective)</span>{% endif %}
+                                        </td>
                                         <td class="col-status">
-                                            <select name="status_{{ item.id }}" class="form-select form-select-sm">
-                                                <option value="Pending" {% if item.status == 'Pending' %}selected{% endif %}>Pending</option>
-                                                <option value="Verified" {% if item.status == 'Verified' %}selected{% endif %}>Verified</option>
-                                                <option value="Defective" {% if item.status == 'Defective' %}selected{% endif %}>Defective</option>
-                                            </select>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <select name="status_{{ item.id }}" class="form-select form-select-sm status-select" data-item-id="{{ item.id }}">
+                                                    <option value="Pending" {% if item.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                                    <option value="Verified" {% if item.status == 'Verified' %}selected{% endif %}>Verified</option>
+                                                    <option value="All Defective" {% if item.status == 'All Defective' %}selected{% endif %}>All Defective</option>
+                                                    <option value="Missing" {% if item.status == 'Missing' %}selected{% endif %}>Missing</option>
+                                                    <option value="Defective" {% if item.status == 'Defective' %}selected{% endif %}>Defective</option>
+                                                </select>
+                                                <input type="number" name="qty_deduct_{{ item.id }}" class="form-control form-control-sm qty-deduct-input" style="display: none; width: 60px;" placeholder="Qty" min="1" max="{{ item.qty }}" value="{% if item.status == 'Missing' and item.missing_qty %}{{ item.missing_qty }}{% elif item.status == 'Defective' and item.defective_qty %}{{ item.defective_qty }}{% endif %}">
+                                            </div>
                                         </td>
                                         <td class="text-end col-money">${{ item.unit_price }}</td>
                                         <td class="text-end fw-semibold col-money">${{ item.total_value }}</td>
@@ -147,5 +156,24 @@
     .card { box-shadow: none !important; border: 1px solid #eee !important; }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selects = document.querySelectorAll('.status-select');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            const input = this.closest('td').querySelector('.qty-deduct-input');
+            if (['Defective', 'Missing'].includes(this.value)) {
+                input.style.display = 'block';
+            } else {
+                input.style.display = 'none';
+                input.value = '';
+            }
+        });
+        // trigger change event on load
+        select.dispatchEvent(new Event('change'));
+    });
+});
+</script>
 {% endblock %}
 

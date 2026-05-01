@@ -172,14 +172,22 @@
                                                     <td>{{ item.variant_style.name|default:"-" }}</td>
                                                     <td>{{ item.variant_gender.name|default:"-" }}</td>
                                                     <td>{{ item.color }} / {{ item.size }}</td>
-                                                    <td class="text-center">{{ item.qty }}</td>
+                                                    <td class="text-center text-nowrap">
+                                                        {{ item.qty }}
+                                                        {% if item.missing_qty %}<span class="text-danger ms-1">(-{{ item.missing_qty }} Missing)</span>{% endif %}
+                                                        {% if item.defective_qty %}<span class="text-danger ms-1">(-{{ item.defective_qty }} Defective)</span>{% endif %}
+                                                    </td>
                                                     <td class="text-end">${{ item.unit_price }}</td>
                                                     <td class="text-end fw-bold">${{ item.total_value }}</td>
                                                     <td class="text-center">
                                                         {% if item.status == 'Verified' %}
                                                             <span class="status-badge badge-verified">Verified</span>
+                                                        {% elif item.status == 'All Defective' %}
+                                                            <span class="status-badge badge-defective">All Defective</span>
+                                                        {% elif item.status == 'Missing' %}
+                                                            <span class="status-badge bg-warning text-dark">Missing</span>
                                                         {% elif item.status == 'Defective' %}
-                                                            <span class="status-badge badge-defective">Defective</span>
+                                                            <span class="status-badge bg-warning text-dark">Defective</span>
                                                         {% else %}
                                                             <span class="status-badge badge-pending">Pending</span>
                                                         {% endif %}

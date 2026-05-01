@@ -62,7 +62,20 @@
             }
             .table td.po-sku {
                 color: #0ab39c !important;
+                min-width: 170px;
                 font-weight: 600 !important;
+            }
+            .fw-semibold{
+                min-width: 100px;
+            }
+            .fw-creatd{
+                min-width: 100px;
+            }
+            .fw-itemcode{
+                min-width: 100px;
+            }
+            .fw-unitprice{
+                min-width: 100px;
             }
         </style>
         <div class="table-responsive">
@@ -72,15 +85,15 @@
                         <th style="width:48px;">
                             <input type="checkbox" class="form-check-input sku-checkbox" id="selectAllSkuRows" />
                         </th>
-                        <th>PO</th>
+                        <th class="fw-semibold">PO</th>
                         <th>Vendor</th>
-                        <th>Created</th>
-                        <th>Item Code</th>
+                        <th class="fw-creatd">Created</th>
+                        <th class="fw-itemcode">Item Code</th>
                         <th>PO SKU</th>
-                        <th>Style</th>
-                        <th>Gender</th>
-                        <th>Category</th>
-                        <th>Unit Price</th>
+                        <th>Style <span class="text-danger">*</span></th>
+                        <th>Gender <span class="text-danger">*</span></th>
+                        <th>Category <span class="text-danger">*</span></th>
+                        <th class="fw-unitprice">Unit Price</th>
                         <th>Reseller Price</th>
                         <th>No of SKU</th>
                         <th style="width:60px;">Download</th>
@@ -93,12 +106,12 @@
                             <td>
                                 <input type="checkbox" class="form-check-input sku-checkbox sku-row" data-item-id="{{ item.pk }}" />
                             </td>
-                            <td class="fw-semibold">{{ po.po_number }}</td>
+                            <td >{{ po.po_number }}</td>
                             <td>{{ po.vendor.name|truncatechars:7 }}</td>
                             <td>{{ po.created_at|date:"d M Y" }}</td>
                             <td>{{ item.item_code|default:"-" }}</td>
                             <td class="po-sku">{{ item.po_sku|default:"-" }}</td>
-                            <td style="min-width:160px;">
+                            <td style="min-width:140px;">
                                 <select class="form-select form-select-sm sku-style" data-item-id="{{ item.pk }}">
                                     <option value="">-</option>
                                     {% for s in styles %}
@@ -106,8 +119,15 @@
                                     {% endfor %}
                                 </select>
                             </td>
-                            <td>{{ item.variant_gender.name|default:"-" }}</td>
-                            <td style="min-width:160px;">
+                            <td style="min-width:140px;">
+                                <select class="form-select form-select-sm sku-gender" data-item-id="{{ item.pk }}">
+                                    <option value="">-</option>
+                                    {% for g in genders %}
+                                        <option value="{{ g.id }}" {% if item.variant_gender_id == g.id %}selected{% endif %}>{{ g.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td style="min-width:140px;">
                                 <select class="form-select form-select-sm sku-category" data-item-id="{{ item.pk }}">
                                     <option value="">-</option>
                                     {% for c in categories %}
@@ -116,13 +136,13 @@
                                 </select>
                             </td>
                             <td>${{ item.unit_price }}</td>
-                            <td style="min-width:160px;">
+                            <td style="min-width:100px;">
                                 <input type="number" class="form-control form-control-sm reseller-price" step="0.01" min="0" value="{{ item.reseller_price|default:item.unit_price }}">
                             </td>
-                            <td style="min-width:160px;">
-                                <div class="qty-stepper" data-initial="{{ item.qty }}">
+                            <td style="min-width:140px;">
+                                <div class="qty-stepper" data-initial="{{ item.valid_qty }}">
                                     <button type="button" class="btn btn-soft-primary btn-sm qty-minus">-</button>
-                                    <input type="number" class="form-control form-control-sm qty-value" min="1" value="{{ item.qty|default:1 }}">
+                                    <input type="number" class="form-control form-control-sm qty-value" min="1" value="{{ item.valid_qty|default:1 }}">
                                     <button type="button" class="btn btn-soft-primary btn-sm qty-plus">+</button>
                                 </div>
                             </td>
@@ -144,6 +164,26 @@
 
 <script>
     (function () {
+        // Auto-refresh when POs/items change (vendor portal verification, new POs, etc.)
+        let lastLatest = null;
+        async function pollChanges() {
+            try {
+                const res = await fetch(window.location.pathname + "?poll=1", { headers: { "Accept": "application/json" } });
+                const data = await res.json();
+                if (!data || !data.ok) return;
+                if (lastLatest === null) {
+                    lastLatest = data.latest || null;
+                    return;
+                }
+                if ((data.latest || null) !== lastLatest) {
+                    window.location.reload();
+                }
+            } catch (e) {
+                // ignore transient network errors
+            }
+        }
+        setInterval(pollChanges, 5000);
+
         const hasSwal = typeof window.Swal !== 'undefined' && window.Swal && typeof window.Swal.fire === 'function';
         function swalPopup(icon, title, text) {
             if (!hasSwal) return;
@@ -216,6 +256,42 @@
                     niceError('Please select at least one row.');
                     return;
                 }
+                
+                let missingFields = false;
+                for (const cb of selected) {
+                    const row = cb.closest('tr');
+                    const styleSel = row ? row.querySelector('.sku-style') : null;
+                    const genderSel = row ? row.querySelector('.sku-gender') : null;
+                    const catSel = row ? row.querySelector('.sku-category') : null;
+                    
+                    if (styleSel) {
+                        if (!styleSel.value) { styleSel.classList.add('is-invalid'); missingFields = true; }
+                        else { styleSel.classList.remove('is-invalid'); }
+                    }
+                    if (genderSel) {
+                        if (!genderSel.value) { genderSel.classList.add('is-invalid'); missingFields = true; }
+                        else { genderSel.classList.remove('is-invalid'); }
+                    }
+                    if (catSel) {
+                        if (!catSel.value) { catSel.classList.add('is-invalid'); missingFields = true; }
+                        else { catSel.classList.remove('is-invalid'); }
+                    }
+                }
+                
+                if (missingFields) {
+                    if (typeof window.Swal !== 'undefined') {
+                        window.Swal.fire({
+                            icon: 'warning',
+                            title: 'Required Fields Missing',
+                            text: 'Please select a Style, Gender, and Category for all checked rows. Empty fields are highlighted in red.',
+                            confirmButtonText: 'Okay',
+                            confirmButtonColor: '#f06548'
+                        });
+                    } else {
+                        alert('REQUIRED FIELDS MISSING:\nPlease make sure you have selected a Style, Gender, and Category for all checked rows. Empty fields have been highlighted in red.');
+                    }
+                    return;
+                }
 
                 const items = selected.map(cb => {
                     const row = cb.closest('tr');
@@ -266,7 +342,7 @@
             });
         }
 
-        async function updateItem(itemId, styleId, categoryName) {
+        async function updateItem(itemId, styleId, categoryName, genderId) {
             const res = await fetch("{% url 'sku_update_item' %}", {
                 method: "POST",
                 headers: {
@@ -276,7 +352,8 @@
                 body: JSON.stringify({
                     id: itemId,
                     variant_style_id: styleId,
-                    category: categoryName
+                    category: categoryName,
+                    variant_gender_id: genderId
                 })
             });
             const data = await res.json();
@@ -288,20 +365,27 @@
         document.addEventListener('change', function (e) {
             const styleEl = e.target.closest('.sku-style');
             const catEl = e.target.closest('.sku-category');
-            if (!styleEl && !catEl) return;
+            const genderEl = e.target.closest('.sku-gender');
+            if (!styleEl && !catEl && !genderEl) return;
 
-            const el = styleEl || catEl;
+            const el = styleEl || catEl || genderEl;
+            if (el && el.value) {
+                el.classList.remove('is-invalid');
+            }
+            
             const itemId = el.getAttribute('data-item-id');
             const row = el.closest('tr');
             const style = row ? row.querySelector('.sku-style') : null;
             const cat = row ? row.querySelector('.sku-category') : null;
+            const gender = row ? row.querySelector('.sku-gender') : null;
             const styleId = style ? style.value : '';
             const categoryName = cat ? cat.value : '';
+            const genderId = gender ? gender.value : '';
 
             if (saveTimer) clearTimeout(saveTimer);
             saveTimer = setTimeout(async () => {
                 try {
-                    await updateItem(itemId, styleId, categoryName);
+                    await updateItem(itemId, styleId, categoryName, genderId);
                 } catch (err) {
                     niceError(err.message || 'Failed to save changes.');
                 }

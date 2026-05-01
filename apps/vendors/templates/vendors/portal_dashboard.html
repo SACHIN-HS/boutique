@@ -27,8 +27,8 @@
                                     <th style="width: 10%;">Category</th>
                                     <th style="width: 10%;">Style</th>
                                     <th style="width: 10%;">Gender</th>
-                                    <th style="width: 10%;">Color</th>
-                                    <th style="width: 10%;">Size</th>
+                                    <th style="width: 10%;">Color <span class="text-danger">*</span></th>
+                                    <th style="width: 10%;">Size <span class="text-danger">*</span></th>
                                     <th style="width: 10%;">Qty <span class="text-danger">*</span></th>
                                     <th style="width: 12%;">Price <span class="text-danger">*</span></th>
                                     <th style="width: 12%;">Total Value</th>
@@ -65,7 +65,10 @@
                                             {% endfor %}
                                         </select>
                                     </td>
-                                    <td><input type="text" name="item_color" class="form-control" placeholder="Color"></td>
+                                    <td>
+                                        <input type="text" name="item_color" class="form-control" placeholder="Color" required>
+                                        <div class="invalid-feedback">Required</div>
+                                    </td>
                                     <td>
                                         <select name="item_size" class="form-select" required>
                                             <option value="">Select</option>
