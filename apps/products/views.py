@@ -84,11 +84,16 @@ def _ensure_product_for_po_item(item: PurchaseOrderItem) -> None:
         prod.qty = total_qty
         prod.colors = ", ".join(sorted(list(unique_colors)))
         prod.sizes = ", ".join(sorted(list(unique_sizes)))
-        if name and not prod.name: prod.name = name
-        if category and not prod.category: prod.category = category
-        if gender_obj: prod.gender = gender_obj
-        if style_obj: prod.style = style_obj
-        if reseller_price_val is not None: prod.reseller_price = reseller_price_val
+        if name:
+            prod.name = name
+        if category:
+            prod.category = category
+        if gender_obj:
+            prod.gender = gender_obj
+        if style_obj:
+            prod.style = style_obj
+        if reseller_price_val is not None:
+            prod.reseller_price = reseller_price_val
         prod.save()
 
     # Sync Variants
@@ -273,7 +278,7 @@ def product_edit(request, pk):
 
 @login_required(login_url='login')
 def product_view(request):
-    products = Product.objects.order_by('-created_at')
+    products = Product.objects.order_by('-updated_at')
     return render(request, 'products/product_view.html', {'products': products})
 
 

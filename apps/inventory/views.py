@@ -16,7 +16,7 @@ def inventory(request):
     products_qs = Product.objects.annotate(
         total_to_website=Sum("moves__qty", filter=Q(moves__from_location="store", moves__to_location="website")),
         total_to_store=Sum("moves__qty", filter=Q(moves__from_location="website", moves__to_location="store")),
-    ).order_by("-created_at")
+    ).order_by("-updated_at")
 
     # Map products to their PO info for display (still using a map for efficiency)
     po_items_map = {}
